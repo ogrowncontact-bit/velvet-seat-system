@@ -11,7 +11,7 @@ const waitlist = [
   { name: "Whitney Hale", party: 2, since: "3 min", phone: "+34 671 ···", status: "Waiting" },
 ];
 
-export default function _() {}
+
 
 function Waitlist() {
   return (
