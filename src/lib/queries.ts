@@ -110,7 +110,7 @@ export async function fetchActivity(rid: string) {
   return data ?? [];
 }
 
-export async function logActivity(rid: string, kind: string, message: string, meta: Record<string, unknown> = {}) {
+export async function logActivity(rid: string, kind: string, message: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   await supabase.from("activity_log").insert({
@@ -118,6 +118,5 @@ export async function logActivity(rid: string, kind: string, message: string, me
     actor_id: user.id,
     kind,
     message,
-    meta,
   });
 }
