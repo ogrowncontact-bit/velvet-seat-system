@@ -21,7 +21,7 @@ function Analytics() {
   // Bookings by hour
   const byHour: Record<number, number> = {};
   inWeek.forEach((r) => { const h = new Date(r.reserved_at).getHours(); byHour[h] = (byHour[h] ?? 0) + 1; });
-  const hourly = Array.from({ length: 8 }, (_, i) => ({ hour: `${16 + i}`, value: byHour[16 + i] ?? 0 }));
+  const hourly = Array.from({ length: 8 }, (_, i) => ({ label: `${16 + i}`, value: byHour[16 + i] ?? 0 }));
 
   // By day
   const byDay: Record<string, number> = {};
