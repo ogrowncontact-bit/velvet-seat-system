@@ -8,9 +8,10 @@ import {
   LineChart,
   CreditCard,
   Settings,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCurrentRestaurant } from "@/hooks/use-current-restaurant";
+import { useCurrentRestaurant, useIsPlatformAdmin } from "@/hooks/use-current-restaurant";
 
 const nav = [
   { to: "/app", label: "Overview", icon: LayoutDashboard, exact: true },
