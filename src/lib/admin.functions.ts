@@ -20,7 +20,7 @@ export const adminListRestaurants = createServerFn({ method: "GET" })
     await assertPlatformAdmin(context.userId);
     const { data, error } = await supabaseAdmin
       .from("restaurants")
-      .select("id, name, slug, currency, timezone, created_at")
+      .select("*")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
