@@ -1,10 +1,10 @@
-import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, ChevronDown, Loader2, Menu, Search, LogOut } from "lucide-react";
+import { Bell, ChevronDown, Loader2, Menu, Search, LogOut, Building2, Shield } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { useCurrentRestaurant } from "@/hooks/use-current-restaurant";
+import { useCurrentRestaurant, useMyRestaurants, useIsPlatformAdmin, setSelectedRestaurant } from "@/hooks/use-current-restaurant";
 import { OnboardingScreen } from "@/components/onboarding-screen";
 import {
   DropdownMenu,
@@ -29,14 +29,17 @@ export const Route = createFileRoute("/app")({
 function AppLayout() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
-  const { data: memberships, isLoading: loadingMemberships } = useCurrentRestaurant();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const { data: memberships, isLoading: loadingMemberships } = useMyRestaurants();
+  const { restaurant, restaurantId } = useCurrentRestaurant();
+  const { data: isAdmin, isLoading: loadingAdmin } = useIsPlatformAdmin();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login", replace: true });
   }, [user, loading, navigate]);
 
-  if (loading || !user || loadingMemberships) {
+  if (loading || !user || loadingMemberships || loadingAdmin) {
     return (
       <div className="min-h-screen grid place-items-center bg-canvas">
         <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -44,12 +47,20 @@ function AppLayout() {
     );
   }
 
-  // No restaurant yet → onboarding
+  // No restaurant yet → onboarding (or admin console for platform admins)
   if (!memberships || memberships.length === 0) {
-    return <OnboardingScreen />;
+    if (isAdmin) {
+      // Admin with no restaurants — go straight to admin console
+      if (!path.startsWith("/app/admin")) {
+        return <RedirectTo to="/app/admin" />;
+      }
+    } else {
+      return <OnboardingScreen />;
+    }
   }
 
   const initials = (user.email ?? "?").slice(0, 2).toUpperCase();
+
 
   return (
     <div className="flex min-h-screen bg-canvas">
@@ -85,10 +96,43 @@ function AppLayout() {
           </div>
 
           <div className="flex items-center gap-2">
+            {isAdmin && memberships && memberships.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="hidden sm:flex items-center gap-2 h-9 px-3 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium">
+                    <Building2 className="size-3.5" />
+                    <span className="max-w-[14ch] truncate">{restaurant?.name ?? "Selecionar"}</span>
+                    <ChevronDown className="size-3 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 max-h-80 overflow-y-auto">
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Restaurantes
+                  </DropdownMenuLabel>
+                  {memberships.map((m) => (
+                    <DropdownMenuItem
+                      key={m.restaurant_id}
+                      onClick={() => {
+                        setSelectedRestaurant(m.restaurant_id);
+                        navigate({ to: "/app" });
+                      }}
+                      className={m.restaurant_id === restaurantId ? "bg-muted" : ""}
+                    >
+                      {m.restaurants?.name}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/app/admin"><Shield className="size-4 mr-2" /> Admin console</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <ThemeToggle />
             <button className="size-9 grid place-items-center rounded-lg border border-border bg-card hover:bg-muted">
               <Bell className="size-4" />
             </button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 h-9 pl-1.5 pr-3 rounded-lg border border-border bg-card hover:bg-muted">
@@ -128,3 +172,14 @@ function AppLayout() {
     </div>
   );
 }
+
+function RedirectTo({ to }: { to: string }) {
+  const navigate = useNavigate();
+  useEffect(() => { navigate({ to, replace: true }); }, [navigate, to]);
+  return (
+    <div className="min-h-screen grid place-items-center bg-canvas">
+      <Loader2 className="size-5 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
