@@ -73,7 +73,22 @@ export function AppSidebar() {
             </Link>
           );
         })}
+        {isAdmin && (
+          <Link
+            to="/app/admin"
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150 mt-3 border-t border-sidebar-border pt-4",
+              path.startsWith("/app/admin")
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Shield className="size-4" />
+            Platform admin
+          </Link>
+        )}
       </nav>
+
 
       <div className="m-3 rounded-2xl border border-sidebar-border bg-card p-4">
         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-1">
