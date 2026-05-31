@@ -96,10 +96,43 @@ function AppLayout() {
           </div>
 
           <div className="flex items-center gap-2">
+            {isAdmin && memberships && memberships.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="hidden sm:flex items-center gap-2 h-9 px-3 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium">
+                    <Building2 className="size-3.5" />
+                    <span className="max-w-[14ch] truncate">{restaurant?.name ?? "Selecionar"}</span>
+                    <ChevronDown className="size-3 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 max-h-80 overflow-y-auto">
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Restaurantes
+                  </DropdownMenuLabel>
+                  {memberships.map((m) => (
+                    <DropdownMenuItem
+                      key={m.restaurant_id}
+                      onClick={() => {
+                        setSelectedRestaurant(m.restaurant_id);
+                        navigate({ to: "/app" });
+                      }}
+                      className={m.restaurant_id === restaurantId ? "bg-muted" : ""}
+                    >
+                      {m.restaurants?.name}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/app/admin"><Shield className="size-4 mr-2" /> Admin console</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <ThemeToggle />
             <button className="size-9 grid place-items-center rounded-lg border border-border bg-card hover:bg-muted">
               <Bell className="size-4" />
             </button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 h-9 pl-1.5 pr-3 rounded-lg border border-border bg-card hover:bg-muted">
