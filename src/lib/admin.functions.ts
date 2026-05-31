@@ -173,13 +173,25 @@ export const adminAddMember = createServerFn({ method: "POST" })
         .upsert({ id: user.id, full_name: data.fullName ?? data.email.split("@")[0] }, { onConflict: "id" });
     }
 
-    const { error: mErr } = await supabaseAdmin
+    const { data: existingMember } = await supabaseAdmin
       .from("restaurant_members")
-      .upsert(
-        { restaurant_id: data.restaurantId, user_id: user.id, role: data.role },
-        { onConflict: "restaurant_id,user_id" },
-      );
-    if (mErr) throw new Error(mErr.message);
+      .select("id")
+      .eq("restaurant_id", data.restaurantId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (existingMember) {
+      const { error: uErr } = await supabaseAdmin
+        .from("restaurant_members")
+        .update({ role: data.role })
+        .eq("id", existingMember.id);
+      if (uErr) throw new Error(uErr.message);
+    } else {
+      const { error: mErr } = await supabaseAdmin
+        .from("restaurant_members")
+        .insert({ restaurant_id: data.restaurantId, user_id: user.id, role: data.role });
+      if (mErr) throw new Error(mErr.message);
+    }
 
     return { userId: user.id };
   });
