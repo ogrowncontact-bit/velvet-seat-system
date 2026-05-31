@@ -27,6 +27,9 @@ const nav = [
 export function AppSidebar() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { restaurant } = useCurrentRestaurant();
+  const { data: isAdmin } = useIsPlatformAdmin();
+
+
 
   return (
     <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar h-screen sticky top-0">
