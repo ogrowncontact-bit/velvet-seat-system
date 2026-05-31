@@ -172,3 +172,14 @@ function AppLayout() {
     </div>
   );
 }
+
+function RedirectTo({ to }: { to: string }) {
+  const navigate = useNavigate();
+  useEffect(() => { navigate({ to, replace: true }); }, [navigate, to]);
+  return (
+    <div className="min-h-screen grid place-items-center bg-canvas">
+      <Loader2 className="size-5 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
