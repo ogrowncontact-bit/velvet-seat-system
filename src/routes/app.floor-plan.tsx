@@ -169,6 +169,8 @@ function FloorPlan() {
             <button
               key={r.id}
               onClick={() => setActiveRoom(r.id)}
+              onDoubleClick={() => setEditingRoom({ id: r.id, name: r.name })}
+              title="Duplo clique para renomear/excluir"
               className={`h-10 px-4 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${
                 currentRoom === r.id
                   ? "border-foreground"
