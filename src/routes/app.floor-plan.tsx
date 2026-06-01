@@ -70,7 +70,9 @@ function FloorPlan() {
 
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [roomOpen, setRoomOpen] = useState(false);
   const [editing, setEditing] = useState<TableRow | null>(null);
+  const [editingRoom, setEditingRoom] = useState<{ id: string; name: string } | null>(null);
 
   const currentRoom = activeRoom ?? rooms.data?.[0]?.id ?? null;
   const visibleTables: TableRow[] =
