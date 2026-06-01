@@ -146,22 +146,16 @@ function FloorPlan() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={async () => {
-              if (!restaurantId) return;
-              const name = prompt("Nome da sala (ex: Terraço, Salão Principal)");
-              if (!name) return;
-              const { error } = await supabase
-                .from("rooms")
-                .insert({ restaurant_id: restaurantId, name, sort_order: rooms.data?.length ?? 0 });
-              if (error) return toast.error(error.message);
-              qc.invalidateQueries({ queryKey: qk.rooms(restaurantId) });
-            }}
+            onClick={() => setRoomOpen(true)}
             className="h-10 px-4 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted"
           >
             + Sala
           </button>
           <button
             onClick={() => {
+              if (!currentRoom) return toast.error("Crie uma sala primeiro");
+              setAddOpen(true);
+            }}
               if (!currentRoom) return toast.error("Crie uma sala primeiro");
               setAddOpen(true);
             }}
