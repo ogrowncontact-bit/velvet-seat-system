@@ -280,7 +280,122 @@ function FloorPlan() {
           }}
         />
       )}
+
+      {roomOpen && (
+        <RoomDialog
+          restaurantId={restaurantId!}
+          existingCount={rooms.data?.length ?? 0}
+          onClose={() => setRoomOpen(false)}
+          onSaved={(id) => {
+            setRoomOpen(false);
+            qc.invalidateQueries({ queryKey: qk.rooms(restaurantId ?? "") });
+            if (id) setActiveRoom(id);
+          }}
+        />
+      )}
+
+      {editingRoom && (
+        <RoomDialog
+          restaurantId={restaurantId!}
+          existingCount={rooms.data?.length ?? 0}
+          room={editingRoom}
+          onClose={() => setEditingRoom(null)}
+          onSaved={() => {
+            setEditingRoom(null);
+            qc.invalidateQueries({ queryKey: qk.rooms(restaurantId ?? "") });
+            qc.invalidateQueries({ queryKey: qk.tables(restaurantId ?? "") });
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function RoomDialog({
+  restaurantId,
+  existingCount,
+  room,
+  onClose,
+  onSaved,
+}: {
+  restaurantId: string;
+  existingCount: number;
+  room?: { id: string; name: string };
+  onClose: () => void;
+  onSaved: (id?: string) => void;
+}) {
+  const [name, setName] = useState(room?.name ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    if (room) {
+      const { error } = await supabase.from("rooms").update({ name: name.trim() }).eq("id", room.id);
+      setSaving(false);
+      if (error) return toast.error(error.message);
+      toast.success("Sala atualizada");
+      onSaved(room.id);
+    } else {
+      const { data, error } = await supabase
+        .from("rooms")
+        .insert({ restaurant_id: restaurantId, name: name.trim(), sort_order: existingCount })
+        .select("id")
+        .single();
+      setSaving(false);
+      if (error) return toast.error(error.message);
+      toast.success("Sala criada");
+      onSaved(data?.id);
+    }
+  };
+
+  const remove = async () => {
+    if (!room) return;
+    if (!confirm(`Excluir sala "${room.name}"? Todas as mesas dentro dela também serão removidas.`))
+      return;
+    await supabase.from("tables").delete().eq("room_id", room.id);
+    const { error } = await supabase.from("rooms").delete().eq("id", room.id);
+    if (error) return toast.error(error.message);
+    toast.success("Sala removida");
+    onSaved();
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{room ? "Editar sala" : "Nova sala"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>Nome</Label>
+            <Input
+              autoFocus
+              value={name}
+              placeholder="Ex: Terraço, Salão Principal, Chef's Counter"
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && save()}
+            />
+          </div>
+        </div>
+        <DialogFooter className={room ? "flex sm:justify-between gap-2" : ""}>
+          {room && (
+            <Button variant="destructive" onClick={remove}>
+              <Trash2 className="size-4 mr-2" /> Excluir
+            </Button>
+          )}
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button onClick={save} disabled={saving || !name.trim()}>
+              {saving && <Loader2 className="size-4 animate-spin mr-2" />}
+              {room ? "Salvar" : "Criar"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
