@@ -156,9 +156,6 @@ function FloorPlan() {
               if (!currentRoom) return toast.error("Crie uma sala primeiro");
               setAddOpen(true);
             }}
-              if (!currentRoom) return toast.error("Crie uma sala primeiro");
-              setAddOpen(true);
-            }}
             className="h-10 px-4 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 inline-flex items-center gap-2"
           >
             <Plus className="size-4" /> Mesa
