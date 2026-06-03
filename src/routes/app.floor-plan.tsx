@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { useCurrentRestaurant } from "@/hooks/use-current-restaurant";
+import { useCurrentRestaurant, useIsPlatformAdmin } from "@/hooks/use-current-restaurant";
 import { fetchTables, fetchRooms, qk } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Loader2, Trash2, Users, Square, Circle, RectangleHorizontal } from "lucide-react";
