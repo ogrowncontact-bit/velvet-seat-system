@@ -143,26 +143,30 @@ function FloorPlan() {
         <div>
           <h1 className="font-serif text-4xl md:text-5xl italic">Floor plan</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Arraste mesas, edite formato e capacidade. Mudanças salvam automaticamente.
+            {canManage
+              ? "Arraste mesas, edite formato e capacidade. Mudanças salvam automaticamente."
+              : "Visualização somente leitura. Apenas gerentes e proprietários podem editar o layout."}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setRoomOpen(true)}
-            className="h-10 px-4 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted"
-          >
-            + Sala
-          </button>
-          <button
-            onClick={() => {
-              if (!currentRoom) return toast.error("Crie uma sala primeiro");
-              setAddOpen(true);
-            }}
-            className="h-10 px-4 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 inline-flex items-center gap-2"
-          >
-            <Plus className="size-4" /> Mesa
-          </button>
-        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setRoomOpen(true)}
+              className="h-10 px-4 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted"
+            >
+              + Sala
+            </button>
+            <button
+              onClick={() => {
+                if (!currentRoom) return toast.error("Crie uma sala primeiro");
+                setAddOpen(true);
+              }}
+              className="h-10 px-4 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 inline-flex items-center gap-2"
+            >
+              <Plus className="size-4" /> Mesa
+            </button>
+          </div>
+        )}
       </header>
 
       {rooms.data && rooms.data.length > 0 && (
