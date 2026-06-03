@@ -216,18 +216,21 @@ function FloorPlan() {
             <button
               key={t.id}
               onPointerDown={(e) => {
+                if (!canManage) return;
                 downTime.current = Date.now();
                 downPos.current = { x: e.clientX, y: e.clientY };
                 onPointerDown(e, t);
               }}
               onClick={(e) => {
+                if (!canManage) return;
                 const dt = Date.now() - downTime.current;
                 const dx = downPos.current ? Math.abs(e.clientX - downPos.current.x) : 0;
                 const dy = downPos.current ? Math.abs(e.clientY - downPos.current.y) : 0;
                 if (dt < 250 && dx < 4 && dy < 4) setEditing(t);
               }}
               className={cn(
-                "absolute flex flex-col items-center justify-center text-center cursor-grab active:cursor-grabbing transition-shadow hover:shadow-soft",
+                "absolute flex flex-col items-center justify-center text-center transition-shadow hover:shadow-soft",
+                canManage ? "cursor-grab active:cursor-grabbing" : "cursor-default",
                 statusStyles[t.status],
                 t.shape === "round" ? "rounded-full" : "rounded-2xl",
               )}
