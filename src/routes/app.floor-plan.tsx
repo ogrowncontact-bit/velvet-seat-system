@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { useCurrentRestaurant } from "@/hooks/use-current-restaurant";
+import { useCurrentRestaurant, useIsPlatformAdmin } from "@/hooks/use-current-restaurant";
 import { fetchTables, fetchRooms, qk } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Loader2, Trash2, Users, Square, Circle, RectangleHorizontal } from "lucide-react";
@@ -56,7 +56,9 @@ function tableSize(seats: number, shape: TableShape) {
 
 function FloorPlan() {
   const qc = useQueryClient();
-  const { restaurantId } = useCurrentRestaurant();
+  const { restaurantId, role } = useCurrentRestaurant();
+  const { data: isPlatformAdmin } = useIsPlatformAdmin();
+  const canManage = isPlatformAdmin || role === "owner" || role === "manager";
   const rooms = useQuery({
     queryKey: qk.rooms(restaurantId ?? ""),
     queryFn: () => fetchRooms(restaurantId!),
@@ -141,26 +143,30 @@ function FloorPlan() {
         <div>
           <h1 className="font-serif text-4xl md:text-5xl italic">Floor plan</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Arraste mesas, edite formato e capacidade. Mudanças salvam automaticamente.
+            {canManage
+              ? "Arraste mesas, edite formato e capacidade. Mudanças salvam automaticamente."
+              : "Visualização somente leitura. Apenas gerentes e proprietários podem editar o layout."}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setRoomOpen(true)}
-            className="h-10 px-4 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted"
-          >
-            + Sala
-          </button>
-          <button
-            onClick={() => {
-              if (!currentRoom) return toast.error("Crie uma sala primeiro");
-              setAddOpen(true);
-            }}
-            className="h-10 px-4 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 inline-flex items-center gap-2"
-          >
-            <Plus className="size-4" /> Mesa
-          </button>
-        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setRoomOpen(true)}
+              className="h-10 px-4 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted"
+            >
+              + Sala
+            </button>
+            <button
+              onClick={() => {
+                if (!currentRoom) return toast.error("Crie uma sala primeiro");
+                setAddOpen(true);
+              }}
+              className="h-10 px-4 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 inline-flex items-center gap-2"
+            >
+              <Plus className="size-4" /> Mesa
+            </button>
+          </div>
+        )}
       </header>
 
       {rooms.data && rooms.data.length > 0 && (
@@ -169,8 +175,8 @@ function FloorPlan() {
             <button
               key={r.id}
               onClick={() => setActiveRoom(r.id)}
-              onDoubleClick={() => setEditingRoom({ id: r.id, name: r.name })}
-              title="Duplo clique para renomear/excluir"
+              onDoubleClick={() => canManage && setEditingRoom({ id: r.id, name: r.name })}
+              title={canManage ? "Duplo clique para renomear/excluir" : undefined}
               className={`h-10 px-4 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${
                 currentRoom === r.id
                   ? "border-foreground"
@@ -210,18 +216,21 @@ function FloorPlan() {
             <button
               key={t.id}
               onPointerDown={(e) => {
+                if (!canManage) return;
                 downTime.current = Date.now();
                 downPos.current = { x: e.clientX, y: e.clientY };
                 onPointerDown(e, t);
               }}
               onClick={(e) => {
+                if (!canManage) return;
                 const dt = Date.now() - downTime.current;
                 const dx = downPos.current ? Math.abs(e.clientX - downPos.current.x) : 0;
                 const dy = downPos.current ? Math.abs(e.clientY - downPos.current.y) : 0;
                 if (dt < 250 && dx < 4 && dy < 4) setEditing(t);
               }}
               className={cn(
-                "absolute flex flex-col items-center justify-center text-center cursor-grab active:cursor-grabbing transition-shadow hover:shadow-soft",
+                "absolute flex flex-col items-center justify-center text-center transition-shadow hover:shadow-soft",
+                canManage ? "cursor-grab active:cursor-grabbing" : "cursor-default",
                 statusStyles[t.status],
                 t.shape === "round" ? "rounded-full" : "rounded-2xl",
               )}
