@@ -56,7 +56,9 @@ function tableSize(seats: number, shape: TableShape) {
 
 function FloorPlan() {
   const qc = useQueryClient();
-  const { restaurantId } = useCurrentRestaurant();
+  const { restaurantId, role } = useCurrentRestaurant();
+  const { data: isPlatformAdmin } = useIsPlatformAdmin();
+  const canManage = isPlatformAdmin || role === "owner" || role === "manager";
   const rooms = useQuery({
     queryKey: qk.rooms(restaurantId ?? ""),
     queryFn: () => fetchRooms(restaurantId!),
