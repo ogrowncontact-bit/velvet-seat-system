@@ -68,7 +68,7 @@ function PublicProfilePage() {
       photos,
       is_published: !!form.is_published,
     };
-    const { error } = await supabase.from("restaurants").update(payload).eq("id", restaurantId);
+    const { error } = await (supabase.from("restaurants") as any).update(payload).eq("id", restaurantId);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Perfil público atualizado");
