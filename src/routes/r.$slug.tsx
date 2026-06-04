@@ -13,16 +13,10 @@ function RestaurantDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["public-restaurant", slug],
     queryFn: async () => {
-      // try slug first
-      let q = await supabase
-        .from("restaurants")
-        .select("*")
-        .eq("is_published", true)
-        .ilike("slug", slug)
-        .maybeSingle();
+      const tbl = supabase.from("restaurants") as any;
+      let q = await tbl.select("*").eq("is_published", true).ilike("slug", slug).maybeSingle();
       if (!q.data) {
-        // fallback to id
-        q = await supabase.from("restaurants").select("*").eq("is_published", true).eq("id", slug).maybeSingle();
+        q = await tbl.select("*").eq("is_published", true).eq("id", slug).maybeSingle();
       }
       if (q.error) throw q.error;
       return q.data as any;
