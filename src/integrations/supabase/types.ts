@@ -266,40 +266,76 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          address: string | null
+          city: string | null
           cover_image_url: string | null
           created_at: string
           created_by: string | null
+          cuisine: string | null
           currency: string
           default_deposit: number
+          description: string | null
+          email: string | null
+          hours: Json | null
           id: string
+          is_published: boolean
           name: string
+          phone: string | null
+          photos: Json
+          price_range: string | null
           slug: string | null
           timezone: string
           updated_at: string
+          website: string | null
+          whatsapp_phone: string | null
         }
         Insert: {
+          address?: string | null
+          city?: string | null
           cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
+          cuisine?: string | null
           currency?: string
           default_deposit?: number
+          description?: string | null
+          email?: string | null
+          hours?: Json | null
           id?: string
+          is_published?: boolean
           name: string
+          phone?: string | null
+          photos?: Json
+          price_range?: string | null
           slug?: string | null
           timezone?: string
           updated_at?: string
+          website?: string | null
+          whatsapp_phone?: string | null
         }
         Update: {
+          address?: string | null
+          city?: string | null
           cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
+          cuisine?: string | null
           currency?: string
           default_deposit?: number
+          description?: string | null
+          email?: string | null
+          hours?: Json | null
           id?: string
+          is_published?: boolean
           name?: string
+          phone?: string | null
+          photos?: Json
+          price_range?: string | null
           slug?: string | null
           timezone?: string
           updated_at?: string
+          website?: string | null
+          whatsapp_phone?: string | null
         }
         Relationships: []
       }
