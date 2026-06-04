@@ -19,6 +19,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as AppWaitlistRouteImport } from './routes/app.waitlist'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppPublicProfileRouteImport } from './routes/app.public-profile'
 import { Route as AppFloorPlanRouteImport } from './routes/app.floor-plan'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
 import { Route as AppBookingsRouteImport } from './routes/app.bookings'
@@ -76,6 +77,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPublicProfileRoute = AppPublicProfileRouteImport.update({
+  id: '/public-profile',
+  path: '/public-profile',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFloorPlanRoute = AppFloorPlanRouteImport.update({
   id: '/floor-plan',
   path: '/floor-plan',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/app/bookings': typeof AppBookingsRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
+  '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
   '/r/$slug': typeof RSlugRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/app/bookings': typeof AppBookingsRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
+  '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
   '/r/$slug': typeof RSlugRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/app/bookings': typeof AppBookingsRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
+  '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
   '/r/$slug': typeof RSlugRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/app/bookings'
     | '/app/customers'
     | '/app/floor-plan'
+    | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
     | '/r/$slug'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/app/bookings'
     | '/app/customers'
     | '/app/floor-plan'
+    | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
     | '/r/$slug'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/app/bookings'
     | '/app/customers'
     | '/app/floor-plan'
+    | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
     | '/r/$slug'
@@ -299,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/public-profile': {
+      id: '/app/public-profile'
+      path: '/public-profile'
+      fullPath: '/app/public-profile'
+      preLoaderRoute: typeof AppPublicProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/floor-plan': {
       id: '/app/floor-plan'
       path: '/floor-plan'
@@ -351,6 +370,7 @@ interface AppRouteChildren {
   AppBookingsRoute: typeof AppBookingsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppFloorPlanRoute: typeof AppFloorPlanRoute
+  AppPublicProfileRoute: typeof AppPublicProfileRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppWaitlistRoute: typeof AppWaitlistRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -363,6 +383,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBookingsRoute: AppBookingsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppFloorPlanRoute: AppFloorPlanRoute,
+  AppPublicProfileRoute: AppPublicProfileRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppWaitlistRoute: AppWaitlistRoute,
   AppIndexRoute: AppIndexRoute,
