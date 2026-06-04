@@ -9,6 +9,7 @@ import {
   CreditCard,
   Settings,
   Shield,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrentRestaurant, useIsPlatformAdmin } from "@/hooks/use-current-restaurant";
@@ -19,6 +20,7 @@ const nav = [
   { to: "/app/bookings", label: "Bookings", icon: CalendarClock },
   { to: "/app/waitlist", label: "Waitlist", icon: Clock },
   { to: "/app/customers", label: "Guests", icon: Users },
+  { to: "/app/public-profile", label: "Perfil público", icon: Globe },
   { to: "/app/analytics", label: "Analytics", icon: LineChart },
   { to: "/app/billing", label: "Billing", icon: CreditCard },
   { to: "/app/settings", label: "Settings", icon: Settings },
