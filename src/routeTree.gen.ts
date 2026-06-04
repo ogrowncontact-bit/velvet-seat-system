@@ -9,14 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RestaurantsRouteImport } from './routes/restaurants'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as AppWaitlistRouteImport } from './routes/app.waitlist'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppPublicProfileRouteImport } from './routes/app.public-profile'
 import { Route as AppFloorPlanRouteImport } from './routes/app.floor-plan'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
 import { Route as AppBookingsRouteImport } from './routes/app.bookings'
@@ -24,6 +27,11 @@ import { Route as AppBillingRouteImport } from './routes/app.billing'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 
+const RestaurantsRoute = RestaurantsRouteImport.update({
+  id: '/restaurants',
+  path: '/restaurants',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -54,6 +62,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const RSlugRoute = RSlugRouteImport.update({
+  id: '/r/$slug',
+  path: '/r/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppWaitlistRoute = AppWaitlistRouteImport.update({
   id: '/waitlist',
   path: '/waitlist',
@@ -62,6 +75,11 @@ const AppWaitlistRoute = AppWaitlistRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPublicProfileRoute = AppPublicProfileRouteImport.update({
+  id: '/public-profile',
+  path: '/public-profile',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFloorPlanRoute = AppFloorPlanRouteImport.update({
@@ -101,14 +119,17 @@ export interface FileRoutesByFullPath {
   '/book': typeof BookRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/restaurants': typeof RestaurantsRoute
   '/app/admin': typeof AppAdminRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/bookings': typeof AppBookingsRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
+  '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
+  '/r/$slug': typeof RSlugRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -116,14 +137,17 @@ export interface FileRoutesByTo {
   '/book': typeof BookRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/restaurants': typeof RestaurantsRoute
   '/app/admin': typeof AppAdminRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/bookings': typeof AppBookingsRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
+  '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
+  '/r/$slug': typeof RSlugRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -133,14 +157,17 @@ export interface FileRoutesById {
   '/book': typeof BookRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/restaurants': typeof RestaurantsRoute
   '/app/admin': typeof AppAdminRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/bookings': typeof AppBookingsRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
+  '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
+  '/r/$slug': typeof RSlugRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -151,14 +178,17 @@ export interface FileRouteTypes {
     | '/book'
     | '/login'
     | '/reset-password'
+    | '/restaurants'
     | '/app/admin'
     | '/app/analytics'
     | '/app/billing'
     | '/app/bookings'
     | '/app/customers'
     | '/app/floor-plan'
+    | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
+    | '/r/$slug'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -166,14 +196,17 @@ export interface FileRouteTypes {
     | '/book'
     | '/login'
     | '/reset-password'
+    | '/restaurants'
     | '/app/admin'
     | '/app/analytics'
     | '/app/billing'
     | '/app/bookings'
     | '/app/customers'
     | '/app/floor-plan'
+    | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
+    | '/r/$slug'
     | '/app'
   id:
     | '__root__'
@@ -182,14 +215,17 @@ export interface FileRouteTypes {
     | '/book'
     | '/login'
     | '/reset-password'
+    | '/restaurants'
     | '/app/admin'
     | '/app/analytics'
     | '/app/billing'
     | '/app/bookings'
     | '/app/customers'
     | '/app/floor-plan'
+    | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
+    | '/r/$slug'
     | '/app/'
   fileRoutesById: FileRoutesById
 }
@@ -199,10 +235,19 @@ export interface RootRouteChildren {
   BookRoute: typeof BookRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RestaurantsRoute: typeof RestaurantsRoute
+  RSlugRoute: typeof RSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/restaurants': {
+      id: '/restaurants'
+      path: '/restaurants'
+      fullPath: '/restaurants'
+      preLoaderRoute: typeof RestaurantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -245,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/r/$slug': {
+      id: '/r/$slug'
+      path: '/r/$slug'
+      fullPath: '/r/$slug'
+      preLoaderRoute: typeof RSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/waitlist': {
       id: '/app/waitlist'
       path: '/waitlist'
@@ -257,6 +309,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/app/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/public-profile': {
+      id: '/app/public-profile'
+      path: '/public-profile'
+      fullPath: '/app/public-profile'
+      preLoaderRoute: typeof AppPublicProfileRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/floor-plan': {
@@ -311,6 +370,7 @@ interface AppRouteChildren {
   AppBookingsRoute: typeof AppBookingsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppFloorPlanRoute: typeof AppFloorPlanRoute
+  AppPublicProfileRoute: typeof AppPublicProfileRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppWaitlistRoute: typeof AppWaitlistRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -323,6 +383,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBookingsRoute: AppBookingsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppFloorPlanRoute: AppFloorPlanRoute,
+  AppPublicProfileRoute: AppPublicProfileRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppWaitlistRoute: AppWaitlistRoute,
   AppIndexRoute: AppIndexRoute,
@@ -336,17 +397,9 @@ const rootRouteChildren: RootRouteChildren = {
   BookRoute: BookRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RestaurantsRoute: RestaurantsRoute,
+  RSlugRoute: RSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
