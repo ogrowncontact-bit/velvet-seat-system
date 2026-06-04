@@ -16,6 +16,7 @@ import { Route as BookRouteImport } from './routes/book'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as AppWaitlistRouteImport } from './routes/app.waitlist'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppFloorPlanRouteImport } from './routes/app.floor-plan'
@@ -59,6 +60,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const RSlugRoute = RSlugRouteImport.update({
+  id: '/r/$slug',
+  path: '/r/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppWaitlistRoute = AppWaitlistRouteImport.update({
   id: '/waitlist',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/app/floor-plan': typeof AppFloorPlanRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
+  '/r/$slug': typeof RSlugRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/app/floor-plan': typeof AppFloorPlanRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
+  '/r/$slug': typeof RSlugRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/app/floor-plan': typeof AppFloorPlanRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
+  '/r/$slug': typeof RSlugRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/app/floor-plan'
     | '/app/settings'
     | '/app/waitlist'
+    | '/r/$slug'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/app/floor-plan'
     | '/app/settings'
     | '/app/waitlist'
+    | '/r/$slug'
     | '/app'
   id:
     | '__root__'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/app/floor-plan'
     | '/app/settings'
     | '/app/waitlist'
+    | '/r/$slug'
     | '/app/'
   fileRoutesById: FileRoutesById
 }
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RestaurantsRoute: typeof RestaurantsRoute
+  RSlugRoute: typeof RSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/r/$slug': {
+      id: '/r/$slug'
+      path: '/r/$slug'
+      fullPath: '/r/$slug'
+      preLoaderRoute: typeof RSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/app/waitlist': {
       id: '/app/waitlist'
@@ -357,6 +377,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RestaurantsRoute: RestaurantsRoute,
+  RSlugRoute: RSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
