@@ -4,7 +4,7 @@ import { useCurrentRestaurant, useIsPlatformAdmin } from "@/hooks/use-current-re
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, ExternalLink } from "lucide-react";
+import { Loader2, Trash2, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/app/public-profile")({ component: PublicProfilePage });
 
