@@ -19,13 +19,12 @@ function RestaurantsList() {
   const { data, isLoading } = useQuery({
     queryKey: ["public-restaurants"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("restaurants")
+      const { data, error } = await (supabase.from("restaurants") as any)
         .select("id, name, slug, description, cuisine, price_range, city, cover_image_url, photos")
         .eq("is_published", true)
         .order("name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
