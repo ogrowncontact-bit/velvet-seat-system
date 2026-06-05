@@ -13,10 +13,10 @@ function RestaurantDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["public-restaurant", slug],
     queryFn: async () => {
-      const tbl = supabase.from("restaurants") as any;
-      let q = await tbl.select("*").eq("is_published", true).ilike("slug", slug).maybeSingle();
+      const tbl = supabase.from("restaurants_public") as any;
+      let q = await tbl.select("*").ilike("slug", slug).maybeSingle();
       if (!q.data) {
-        q = await tbl.select("*").eq("is_published", true).eq("id", slug).maybeSingle();
+        q = await tbl.select("*").eq("id", slug).maybeSingle();
       }
       if (q.error) throw q.error;
       return q.data as any;
