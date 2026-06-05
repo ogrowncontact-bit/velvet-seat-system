@@ -50,6 +50,13 @@ export type Database = {
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "activity_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       customers: {
@@ -104,6 +111,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
         ]
@@ -224,6 +238,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reservations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reservations_table_id_fkey"
             columns: ["table_id"]
             isOneToOne: false
@@ -260,6 +281,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_members_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
         ]
@@ -369,6 +397,13 @@ export type Database = {
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rooms_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       tables: {
@@ -417,6 +452,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tables_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
           {
@@ -470,11 +512,71 @@ export type Database = {
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "waitlist_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      restaurants_public: {
+        Row: {
+          address: string | null
+          city: string | null
+          cover_image_url: string | null
+          cuisine: string | null
+          description: string | null
+          email: string | null
+          hours: Json | null
+          id: string | null
+          name: string | null
+          phone: string | null
+          photos: Json | null
+          price_range: string | null
+          slug: string | null
+          website: string | null
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          cover_image_url?: string | null
+          cuisine?: string | null
+          description?: string | null
+          email?: string | null
+          hours?: Json | null
+          id?: string | null
+          name?: string | null
+          phone?: string | null
+          photos?: Json | null
+          price_range?: string | null
+          slug?: string | null
+          website?: string | null
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          cover_image_url?: string | null
+          cuisine?: string | null
+          description?: string | null
+          email?: string | null
+          hours?: Json | null
+          id?: string | null
+          name?: string | null
+          phone?: string | null
+          photos?: Json | null
+          price_range?: string | null
+          slug?: string | null
+          website?: string | null
+          whatsapp_phone?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
