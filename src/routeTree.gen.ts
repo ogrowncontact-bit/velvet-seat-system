@@ -20,8 +20,11 @@ import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as AppWaitlistRouteImport } from './routes/app.waitlist'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppPublicProfileRouteImport } from './routes/app.public-profile'
+import { Route as AppOperatorsRouteImport } from './routes/app.operators'
+import { Route as AppMenuRouteImport } from './routes/app.menu'
 import { Route as AppFloorPlanRouteImport } from './routes/app.floor-plan'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
+import { Route as AppCashierRouteImport } from './routes/app.cashier'
 import { Route as AppBookingsRouteImport } from './routes/app.bookings'
 import { Route as AppBillingRouteImport } from './routes/app.billing'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
@@ -82,6 +85,16 @@ const AppPublicProfileRoute = AppPublicProfileRouteImport.update({
   path: '/public-profile',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOperatorsRoute = AppOperatorsRouteImport.update({
+  id: '/operators',
+  path: '/operators',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMenuRoute = AppMenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFloorPlanRoute = AppFloorPlanRouteImport.update({
   id: '/floor-plan',
   path: '/floor-plan',
@@ -90,6 +103,11 @@ const AppFloorPlanRoute = AppFloorPlanRouteImport.update({
 const AppCustomersRoute = AppCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCashierRoute = AppCashierRouteImport.update({
+  id: '/cashier',
+  path: '/cashier',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBookingsRoute = AppBookingsRouteImport.update({
@@ -124,8 +142,11 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/bookings': typeof AppBookingsRoute
+  '/app/cashier': typeof AppCashierRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
+  '/app/menu': typeof AppMenuRoute
+  '/app/operators': typeof AppOperatorsRoute
   '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
@@ -142,8 +163,11 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/bookings': typeof AppBookingsRoute
+  '/app/cashier': typeof AppCashierRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
+  '/app/menu': typeof AppMenuRoute
+  '/app/operators': typeof AppOperatorsRoute
   '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
@@ -162,8 +186,11 @@ export interface FileRoutesById {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/bookings': typeof AppBookingsRoute
+  '/app/cashier': typeof AppCashierRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
+  '/app/menu': typeof AppMenuRoute
+  '/app/operators': typeof AppOperatorsRoute
   '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
@@ -183,8 +210,11 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/billing'
     | '/app/bookings'
+    | '/app/cashier'
     | '/app/customers'
     | '/app/floor-plan'
+    | '/app/menu'
+    | '/app/operators'
     | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
@@ -201,8 +231,11 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/billing'
     | '/app/bookings'
+    | '/app/cashier'
     | '/app/customers'
     | '/app/floor-plan'
+    | '/app/menu'
+    | '/app/operators'
     | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
@@ -220,8 +253,11 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/billing'
     | '/app/bookings'
+    | '/app/cashier'
     | '/app/customers'
     | '/app/floor-plan'
+    | '/app/menu'
+    | '/app/operators'
     | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
@@ -318,6 +354,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPublicProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/operators': {
+      id: '/app/operators'
+      path: '/operators'
+      fullPath: '/app/operators'
+      preLoaderRoute: typeof AppOperatorsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/menu': {
+      id: '/app/menu'
+      path: '/menu'
+      fullPath: '/app/menu'
+      preLoaderRoute: typeof AppMenuRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/floor-plan': {
       id: '/app/floor-plan'
       path: '/floor-plan'
@@ -330,6 +380,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/app/customers'
       preLoaderRoute: typeof AppCustomersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/cashier': {
+      id: '/app/cashier'
+      path: '/cashier'
+      fullPath: '/app/cashier'
+      preLoaderRoute: typeof AppCashierRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/bookings': {
@@ -368,8 +425,11 @@ interface AppRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppBillingRoute: typeof AppBillingRoute
   AppBookingsRoute: typeof AppBookingsRoute
+  AppCashierRoute: typeof AppCashierRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppFloorPlanRoute: typeof AppFloorPlanRoute
+  AppMenuRoute: typeof AppMenuRoute
+  AppOperatorsRoute: typeof AppOperatorsRoute
   AppPublicProfileRoute: typeof AppPublicProfileRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppWaitlistRoute: typeof AppWaitlistRoute
@@ -381,8 +441,11 @@ const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppBillingRoute: AppBillingRoute,
   AppBookingsRoute: AppBookingsRoute,
+  AppCashierRoute: AppCashierRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppFloorPlanRoute: AppFloorPlanRoute,
+  AppMenuRoute: AppMenuRoute,
+  AppOperatorsRoute: AppOperatorsRoute,
   AppPublicProfileRoute: AppPublicProfileRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppWaitlistRoute: AppWaitlistRoute,
@@ -403,13 +466,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
