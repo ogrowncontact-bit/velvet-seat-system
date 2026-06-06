@@ -59,6 +59,254 @@ export type Database = {
           },
         ]
       }
+      check_items: {
+        Row: {
+          added_by_operator: string | null
+          added_by_user: string | null
+          check_id: string
+          created_at: string
+          id: string
+          menu_item_id: string | null
+          name: string
+          notes: string | null
+          qty: number
+          restaurant_id: string
+          unit_price: number
+          voided: boolean
+        }
+        Insert: {
+          added_by_operator?: string | null
+          added_by_user?: string | null
+          check_id: string
+          created_at?: string
+          id?: string
+          menu_item_id?: string | null
+          name: string
+          notes?: string | null
+          qty?: number
+          restaurant_id: string
+          unit_price: number
+          voided?: boolean
+        }
+        Update: {
+          added_by_operator?: string | null
+          added_by_user?: string | null
+          check_id?: string
+          created_at?: string
+          id?: string
+          menu_item_id?: string | null
+          name?: string
+          notes?: string | null
+          qty?: number
+          restaurant_id?: string
+          unit_price?: number
+          voided?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "check_items_added_by_operator_fkey"
+            columns: ["added_by_operator"]
+            isOneToOne: false
+            referencedRelation: "staff_operators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_items_check_id_fkey"
+            columns: ["check_id"]
+            isOneToOne: false
+            referencedRelation: "checks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      check_payments: {
+        Row: {
+          amount: number
+          check_id: string
+          created_at: string
+          id: string
+          method: string
+          paid_at: string
+          received_by_operator: string | null
+          received_by_user: string | null
+          restaurant_id: string
+        }
+        Insert: {
+          amount: number
+          check_id: string
+          created_at?: string
+          id?: string
+          method: string
+          paid_at?: string
+          received_by_operator?: string | null
+          received_by_user?: string | null
+          restaurant_id: string
+        }
+        Update: {
+          amount?: number
+          check_id?: string
+          created_at?: string
+          id?: string
+          method?: string
+          paid_at?: string
+          received_by_operator?: string | null
+          received_by_user?: string | null
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "check_payments_check_id_fkey"
+            columns: ["check_id"]
+            isOneToOne: false
+            referencedRelation: "checks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_payments_received_by_operator_fkey"
+            columns: ["received_by_operator"]
+            isOneToOne: false
+            referencedRelation: "staff_operators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_payments_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_payments_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checks: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          discount: number
+          guest_name: string | null
+          id: string
+          notes: string | null
+          opened_at: string
+          opened_by_operator: string | null
+          opened_by_user: string | null
+          party_size: number | null
+          payment_method: string | null
+          reservation_id: string | null
+          restaurant_id: string
+          service_charge: number
+          status: string
+          subtotal: number
+          table_id: string | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          discount?: number
+          guest_name?: string | null
+          id?: string
+          notes?: string | null
+          opened_at?: string
+          opened_by_operator?: string | null
+          opened_by_user?: string | null
+          party_size?: number | null
+          payment_method?: string | null
+          reservation_id?: string | null
+          restaurant_id: string
+          service_charge?: number
+          status?: string
+          subtotal?: number
+          table_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          discount?: number
+          guest_name?: string | null
+          id?: string
+          notes?: string | null
+          opened_at?: string
+          opened_by_operator?: string | null
+          opened_by_user?: string | null
+          party_size?: number | null
+          payment_method?: string | null
+          reservation_id?: string | null
+          restaurant_id?: string
+          service_charge?: number
+          status?: string
+          subtotal?: number
+          table_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checks_opened_by_operator_fkey"
+            columns: ["opened_by_operator"]
+            isOneToOne: false
+            referencedRelation: "staff_operators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checks_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checks_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checks_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checks_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           allergies: string | null
@@ -115,6 +363,109 @@ export type Database = {
           },
           {
             foreignKeyName: "customers_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          restaurant_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          restaurant_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          restaurant_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_items: {
+        Row: {
+          available: boolean
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price: number
+          restaurant_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          available?: boolean
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price?: number
+          restaurant_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          available?: boolean
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          restaurant_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
@@ -399,6 +750,57 @@ export type Database = {
           },
           {
             foreignKeyName: "rooms_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_operators: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          pin_hash: string
+          pin_salt: string
+          restaurant_id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          pin_hash: string
+          pin_salt: string
+          restaurant_id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          pin_hash?: string
+          pin_salt?: string
+          restaurant_id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_operators_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_operators_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
