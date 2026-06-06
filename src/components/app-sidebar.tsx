@@ -10,6 +10,9 @@ import {
   Settings,
   Shield,
   Globe,
+  Receipt,
+  BookOpen,
+  IdCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrentRestaurant, useIsPlatformAdmin } from "@/hooks/use-current-restaurant";
@@ -17,6 +20,9 @@ import { useCurrentRestaurant, useIsPlatformAdmin } from "@/hooks/use-current-re
 const nav = [
   { to: "/app", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/app/floor-plan", label: "Floor plan", icon: LayoutGrid },
+  { to: "/app/cashier", label: "Cashier", icon: Receipt },
+  { to: "/app/menu", label: "Menu", icon: BookOpen },
+  { to: "/app/operators", label: "Staff PINs", icon: IdCard },
   { to: "/app/bookings", label: "Bookings", icon: CalendarClock },
   { to: "/app/waitlist", label: "Waitlist", icon: Clock },
   { to: "/app/customers", label: "Guests", icon: Users },
