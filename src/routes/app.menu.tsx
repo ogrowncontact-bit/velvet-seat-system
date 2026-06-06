@@ -164,7 +164,7 @@ function MenuPage() {
       </div>
 
       <div className="space-y-8">
-        {byCategory.map(({ cat, items }) => (
+        {byCategory.map(({ cat, items }: { cat: any; items: any[] }) => (
           <Section
             key={cat.id}
             title={cat.name}
