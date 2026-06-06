@@ -20,6 +20,7 @@ import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as AppWaitlistRouteImport } from './routes/app.waitlist'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppPublicProfileRouteImport } from './routes/app.public-profile'
+import { Route as AppOperatorsRouteImport } from './routes/app.operators'
 import { Route as AppMenuRouteImport } from './routes/app.menu'
 import { Route as AppFloorPlanRouteImport } from './routes/app.floor-plan'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
@@ -83,6 +84,11 @@ const AppPublicProfileRoute = AppPublicProfileRouteImport.update({
   path: '/public-profile',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOperatorsRoute = AppOperatorsRouteImport.update({
+  id: '/operators',
+  path: '/operators',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMenuRoute = AppMenuRouteImport.update({
   id: '/menu',
   path: '/menu',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
   '/app/menu': typeof AppMenuRoute
+  '/app/operators': typeof AppOperatorsRoute
   '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
   '/app/menu': typeof AppMenuRoute
+  '/app/operators': typeof AppOperatorsRoute
   '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
   '/app/menu': typeof AppMenuRoute
+  '/app/operators': typeof AppOperatorsRoute
   '/app/public-profile': typeof AppPublicProfileRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/waitlist': typeof AppWaitlistRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/app/customers'
     | '/app/floor-plan'
     | '/app/menu'
+    | '/app/operators'
     | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/app/customers'
     | '/app/floor-plan'
     | '/app/menu'
+    | '/app/operators'
     | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/app/customers'
     | '/app/floor-plan'
     | '/app/menu'
+    | '/app/operators'
     | '/app/public-profile'
     | '/app/settings'
     | '/app/waitlist'
@@ -330,6 +342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPublicProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/operators': {
+      id: '/app/operators'
+      path: '/operators'
+      fullPath: '/app/operators'
+      preLoaderRoute: typeof AppOperatorsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/menu': {
       id: '/app/menu'
       path: '/menu'
@@ -390,6 +409,7 @@ interface AppRouteChildren {
   AppCustomersRoute: typeof AppCustomersRoute
   AppFloorPlanRoute: typeof AppFloorPlanRoute
   AppMenuRoute: typeof AppMenuRoute
+  AppOperatorsRoute: typeof AppOperatorsRoute
   AppPublicProfileRoute: typeof AppPublicProfileRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppWaitlistRoute: typeof AppWaitlistRoute
@@ -404,6 +424,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCustomersRoute: AppCustomersRoute,
   AppFloorPlanRoute: AppFloorPlanRoute,
   AppMenuRoute: AppMenuRoute,
+  AppOperatorsRoute: AppOperatorsRoute,
   AppPublicProfileRoute: AppPublicProfileRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppWaitlistRoute: AppWaitlistRoute,
@@ -424,3 +445,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
