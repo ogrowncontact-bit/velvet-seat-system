@@ -24,6 +24,7 @@ import { Route as AppOperatorsRouteImport } from './routes/app.operators'
 import { Route as AppMenuRouteImport } from './routes/app.menu'
 import { Route as AppFloorPlanRouteImport } from './routes/app.floor-plan'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
+import { Route as AppCashierRouteImport } from './routes/app.cashier'
 import { Route as AppBookingsRouteImport } from './routes/app.bookings'
 import { Route as AppBillingRouteImport } from './routes/app.billing'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
@@ -104,6 +105,11 @@ const AppCustomersRoute = AppCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCashierRoute = AppCashierRouteImport.update({
+  id: '/cashier',
+  path: '/cashier',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBookingsRoute = AppBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/bookings': typeof AppBookingsRoute
+  '/app/cashier': typeof AppCashierRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
   '/app/menu': typeof AppMenuRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/bookings': typeof AppBookingsRoute
+  '/app/cashier': typeof AppCashierRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
   '/app/menu': typeof AppMenuRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/billing': typeof AppBillingRoute
   '/app/bookings': typeof AppBookingsRoute
+  '/app/cashier': typeof AppCashierRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/floor-plan': typeof AppFloorPlanRoute
   '/app/menu': typeof AppMenuRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/billing'
     | '/app/bookings'
+    | '/app/cashier'
     | '/app/customers'
     | '/app/floor-plan'
     | '/app/menu'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/billing'
     | '/app/bookings'
+    | '/app/cashier'
     | '/app/customers'
     | '/app/floor-plan'
     | '/app/menu'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/billing'
     | '/app/bookings'
+    | '/app/cashier'
     | '/app/customers'
     | '/app/floor-plan'
     | '/app/menu'
@@ -370,6 +382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCustomersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/cashier': {
+      id: '/app/cashier'
+      path: '/cashier'
+      fullPath: '/app/cashier'
+      preLoaderRoute: typeof AppCashierRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/bookings': {
       id: '/app/bookings'
       path: '/bookings'
@@ -406,6 +425,7 @@ interface AppRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppBillingRoute: typeof AppBillingRoute
   AppBookingsRoute: typeof AppBookingsRoute
+  AppCashierRoute: typeof AppCashierRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppFloorPlanRoute: typeof AppFloorPlanRoute
   AppMenuRoute: typeof AppMenuRoute
@@ -421,6 +441,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppBillingRoute: AppBillingRoute,
   AppBookingsRoute: AppBookingsRoute,
+  AppCashierRoute: AppCashierRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppFloorPlanRoute: AppFloorPlanRoute,
   AppMenuRoute: AppMenuRoute,
