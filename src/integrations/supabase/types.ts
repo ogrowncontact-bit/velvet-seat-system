@@ -999,11 +999,7 @@ export type Database = {
       }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       verify_operator_pin: {
-        Args: {
-          _operator_id: string
-          _pin_hash: string
-          _restaurant_id: string
-        }
+        Args: { _pin: string; _restaurant_id: string }
         Returns: {
           id: string
           name: string
