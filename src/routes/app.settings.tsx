@@ -121,6 +121,43 @@ function SettingsPage() {
       </section>
 
       <section className="rounded-3xl border border-border bg-card overflow-hidden">
+        <div className="p-6 border-b border-border"><h2 className="font-medium">No-show policy</h2><p className="text-xs text-muted-foreground mt-1">Protect your service from no-shows. Applied to new reservations.</p></div>
+        <div className="p-6 space-y-4">
+          <Field label="Policy type">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {([
+                { v: "none", label: "None" },
+                { v: "card", label: "Card hold" },
+                { v: "deposit", label: "Deposit" },
+                { v: "fine", label: "Fine on no-show" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => setPolicy(opt.v)}
+                  className={`h-10 rounded-lg border text-sm font-medium transition ${policy === opt.v ? "bg-foreground text-background border-foreground" : "border-border bg-card hover:bg-muted"}`}
+                >{opt.label}</button>
+              ))}
+            </div>
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={`Deposit (${currency})`}>
+              <input type="number" min={0} step="0.01" value={noShowDeposit} onChange={(e) => setNoShowDeposit(e.target.value)} className="input tnum" disabled={policy !== "deposit"} />
+            </Field>
+            <Field label={`Fine (${currency})`}>
+              <input type="number" min={0} step="0.01" value={noShowFine} onChange={(e) => setNoShowFine(e.target.value)} className="input tnum" disabled={policy !== "fine"} />
+            </Field>
+          </div>
+          <Field label="Waitlist offer timeout (minutes)">
+            <input type="number" min={1} max={60} value={offerTimeout} onChange={(e) => setOfferTimeout(e.target.value)} className="input tnum" />
+          </Field>
+          <button onClick={savePolicy} disabled={savingPolicy} className="h-10 px-5 rounded-lg bg-foreground text-background text-sm font-medium inline-flex items-center gap-2 disabled:opacity-50">
+            {savingPolicy && <Loader2 className="size-4 animate-spin" />} Save policy
+          </button>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-border bg-card overflow-hidden">
         <div className="p-6 border-b border-border"><h2 className="font-medium">Integrations</h2></div>
         <div className="divide-y divide-border">
           {[
