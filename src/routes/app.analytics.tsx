@@ -14,9 +14,30 @@ function Analytics() {
   const weekStart = new Date(now); weekStart.setDate(now.getDate() - 6); weekStart.setHours(0,0,0,0);
   const inWeek = all.filter((r) => new Date(r.reserved_at) >= weekStart);
   const covers = inWeek.reduce((s, r) => s + r.party_size, 0);
+  const completed = inWeek.filter((r) => r.status === "completed").length;
   const noShow = inWeek.filter((r) => r.status === "no_show").length;
-  const noShowRate = inWeek.length ? Math.round((noShow / inWeek.length) * 100 * 10) / 10 : 0;
+  const cancelled = inWeek.filter((r) => r.status === "cancelled").length;
+  const closed = completed + noShow + cancelled;
+  const showRate = closed ? Math.round((completed / closed) * 100 * 10) / 10 : 0;
+  const noShowRate = closed ? Math.round((noShow / closed) * 100 * 10) / 10 : 0;
+  const cancelRate = closed ? Math.round((cancelled / closed) * 100 * 10) / 10 : 0;
   const avgParty = inWeek.length ? Math.round((covers / inWeek.length) * 10) / 10 : 0;
+
+  // Top offenders (last 90 days)
+  const ninety = new Date(now); ninety.setDate(now.getDate() - 90);
+  const recent = all.filter((r) => new Date(r.reserved_at) >= ninety);
+  const offenderMap = new Map<string, { name: string; phone: string | null; no_shows: number; total: number }>();
+  recent.forEach((r: any) => {
+    const key = r.customers?.full_name ?? r.guest_name ?? r.guest_phone ?? "Guest";
+    const prev = offenderMap.get(key) ?? { name: key, phone: r.guest_phone ?? null, no_shows: 0, total: 0 };
+    prev.total += 1;
+    if (r.status === "no_show") prev.no_shows += 1;
+    offenderMap.set(key, prev);
+  });
+  const offenders = Array.from(offenderMap.values())
+    .filter((o) => o.no_shows > 0)
+    .sort((a, b) => b.no_shows - a.no_shows)
+    .slice(0, 8);
 
   // Bookings by hour
   const byHour: Record<number, number> = {};
@@ -33,10 +54,10 @@ function Analytics() {
   const weekly = Object.entries(byDay).map(([k, v]) => ({ label: new Date(k).toLocaleDateString([], { weekday: "short" }), value: v }));
 
   const kpis = [
-    { label: "Covers this week", value: covers.toString() },
-    { label: "Reservations", value: inWeek.length.toString() },
-    { label: "Avg party size", value: avgParty.toString() },
+    { label: "Show rate", value: `${showRate}%` },
     { label: "No-show rate", value: `${noShowRate}%` },
+    { label: "Cancel rate", value: `${cancelRate}%` },
+    { label: "Avg party", value: avgParty.toString() },
   ];
 
   return (
