@@ -18,12 +18,22 @@ function SettingsPage() {
   const [defaultDeposit, setDeposit] = useState("0");
   const [saving, setSaving] = useState(false);
 
+  const [policy, setPolicy] = useState<"none" | "card" | "deposit" | "fine">("none");
+  const [noShowDeposit, setNoShowDeposit] = useState("0");
+  const [noShowFine, setNoShowFine] = useState("0");
+  const [offerTimeout, setOfferTimeout] = useState("10");
+  const [savingPolicy, setSavingPolicy] = useState(false);
+
   useEffect(() => {
     if (restaurant) {
       setName(restaurant.name);
       setTz(restaurant.timezone);
       setCurrency(restaurant.currency);
       setDeposit(String(restaurant.default_deposit ?? 0));
+      setPolicy((restaurant as any).no_show_policy ?? "none");
+      setNoShowDeposit(String((restaurant as any).no_show_deposit ?? 0));
+      setNoShowFine(String((restaurant as any).no_show_fine ?? 0));
+      setOfferTimeout(String((restaurant as any).offer_timeout_minutes ?? 10));
     }
   }, [restaurant]);
 
@@ -49,6 +59,21 @@ function SettingsPage() {
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Venue updated");
+    qc.invalidateQueries({ queryKey: qk.myRestaurants });
+  };
+
+  const savePolicy = async () => {
+    if (!restaurantId) return;
+    setSavingPolicy(true);
+    const { error } = await supabase.from("restaurants").update({
+      no_show_policy: policy,
+      no_show_deposit: parseFloat(noShowDeposit) || 0,
+      no_show_fine: parseFloat(noShowFine) || 0,
+      offer_timeout_minutes: Math.max(1, parseInt(offerTimeout) || 10),
+    } as any).eq("id", restaurantId);
+    setSavingPolicy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Policy updated");
     qc.invalidateQueries({ queryKey: qk.myRestaurants });
   };
 
@@ -92,6 +117,43 @@ function SettingsPage() {
         </div>
         <div className="p-5 bg-muted/40 text-xs text-muted-foreground leading-relaxed">
           To invite a teammate, ask them to sign up at the login page and then add them here. Multi-user invitations are coming soon.
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-border bg-card overflow-hidden">
+        <div className="p-6 border-b border-border"><h2 className="font-medium">No-show policy</h2><p className="text-xs text-muted-foreground mt-1">Protect your service from no-shows. Applied to new reservations.</p></div>
+        <div className="p-6 space-y-4">
+          <Field label="Policy type">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {([
+                { v: "none", label: "None" },
+                { v: "card", label: "Card hold" },
+                { v: "deposit", label: "Deposit" },
+                { v: "fine", label: "Fine on no-show" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => setPolicy(opt.v)}
+                  className={`h-10 rounded-lg border text-sm font-medium transition ${policy === opt.v ? "bg-foreground text-background border-foreground" : "border-border bg-card hover:bg-muted"}`}
+                >{opt.label}</button>
+              ))}
+            </div>
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={`Deposit (${currency})`}>
+              <input type="number" min={0} step="0.01" value={noShowDeposit} onChange={(e) => setNoShowDeposit(e.target.value)} className="input tnum" disabled={policy !== "deposit"} />
+            </Field>
+            <Field label={`Fine (${currency})`}>
+              <input type="number" min={0} step="0.01" value={noShowFine} onChange={(e) => setNoShowFine(e.target.value)} className="input tnum" disabled={policy !== "fine"} />
+            </Field>
+          </div>
+          <Field label="Waitlist offer timeout (minutes)">
+            <input type="number" min={1} max={60} value={offerTimeout} onChange={(e) => setOfferTimeout(e.target.value)} className="input tnum" />
+          </Field>
+          <button onClick={savePolicy} disabled={savingPolicy} className="h-10 px-5 rounded-lg bg-foreground text-background text-sm font-medium inline-flex items-center gap-2 disabled:opacity-50">
+            {savingPolicy && <Loader2 className="size-4 animate-spin" />} Save policy
+          </button>
         </div>
       </section>
 

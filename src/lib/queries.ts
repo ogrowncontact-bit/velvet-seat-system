@@ -93,8 +93,20 @@ export async function fetchWaitlist(rid: string) {
     .from("waitlist")
     .select("*")
     .eq("restaurant_id", rid)
-    .eq("status", "waiting")
+    .in("status", ["waiting", "offered"])
     .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchWaitlistHistory(rid: string) {
+  const { data, error } = await supabase
+    .from("waitlist")
+    .select("*")
+    .eq("restaurant_id", rid)
+    .in("status", ["seated", "expired", "cancelled"])
+    .order("updated_at", { ascending: false })
+    .limit(50);
   if (error) throw error;
   return data ?? [];
 }

@@ -659,6 +659,10 @@ export type Database = {
           id: string
           is_published: boolean
           name: string
+          no_show_deposit: number
+          no_show_fine: number
+          no_show_policy: Database["public"]["Enums"]["no_show_policy"]
+          offer_timeout_minutes: number
           phone: string | null
           photos: Json
           price_range: string | null
@@ -683,6 +687,10 @@ export type Database = {
           id?: string
           is_published?: boolean
           name: string
+          no_show_deposit?: number
+          no_show_fine?: number
+          no_show_policy?: Database["public"]["Enums"]["no_show_policy"]
+          offer_timeout_minutes?: number
           phone?: string | null
           photos?: Json
           price_range?: string | null
@@ -707,6 +715,10 @@ export type Database = {
           id?: string
           is_published?: boolean
           name?: string
+          no_show_deposit?: number
+          no_show_fine?: number
+          no_show_policy?: Database["public"]["Enums"]["no_show_policy"]
+          offer_timeout_minutes?: number
           phone?: string | null
           photos?: Json
           price_range?: string | null
@@ -875,38 +887,60 @@ export type Database = {
       waitlist: {
         Row: {
           created_at: string
+          customer_id: string | null
           estimated_minutes: number
           guest_name: string
           guest_phone: string | null
           id: string
           notes: string | null
+          notified_at: string | null
           party_size: number
+          response_deadline: string | null
           restaurant_id: string
+          seated_at: string | null
           status: string
+          updated_at: string
         }
         Insert: {
           created_at?: string
+          customer_id?: string | null
           estimated_minutes?: number
           guest_name: string
           guest_phone?: string | null
           id?: string
           notes?: string | null
+          notified_at?: string | null
           party_size: number
+          response_deadline?: string | null
           restaurant_id: string
+          seated_at?: string | null
           status?: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
+          customer_id?: string | null
           estimated_minutes?: number
           guest_name?: string
           guest_phone?: string | null
           id?: string
           notes?: string | null
+          notified_at?: string | null
           party_size?: number
+          response_deadline?: string | null
           restaurant_id?: string
+          seated_at?: string | null
           status?: string
+          updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "waitlist_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "waitlist_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -981,6 +1015,14 @@ export type Database = {
       }
     }
     Functions: {
+      customer_reliability_score: {
+        Args: { _customer_id: string }
+        Returns: number
+      }
+      expire_stale_waitlist_offers: {
+        Args: { _restaurant_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _restaurant_id: string
@@ -998,6 +1040,31 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
+      promote_next_waitlist: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          created_at: string
+          customer_id: string | null
+          estimated_minutes: number
+          guest_name: string
+          guest_phone: string | null
+          id: string
+          notes: string | null
+          notified_at: string | null
+          party_size: number
+          response_deadline: string | null
+          restaurant_id: string
+          seated_at: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "waitlist"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       verify_operator_pin: {
         Args: { _pin: string; _restaurant_id: string }
         Returns: {
@@ -1009,6 +1076,7 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "manager" | "host" | "staff"
+      no_show_policy: "none" | "card" | "deposit" | "fine"
       reservation_source:
         | "widget"
         | "phone"
@@ -1159,6 +1227,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "manager", "host", "staff"],
+      no_show_policy: ["none", "card", "deposit", "fine"],
       reservation_source: [
         "widget",
         "phone",
