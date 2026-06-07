@@ -998,6 +998,14 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
+      verify_operator_pin: {
+        Args: { _pin: string; _restaurant_id: string }
+        Returns: {
+          id: string
+          name: string
+          role: string
+        }[]
+      }
     }
     Enums: {
       app_role: "owner" | "manager" | "host" | "staff"
