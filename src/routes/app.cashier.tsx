@@ -295,25 +295,18 @@ function OperatorPinUnlock({
     e.preventDefault();
     if (!/^\d{4}$/.test(pin)) return;
     setLoading(true);
-    const { data, error } = await (supabase as any)
-      .from("staff_operators")
-      .select("id, name, pin_hash, pin_salt")
-      .eq("restaurant_id", restaurantId)
-      .eq("active", true);
-    if (error) {
-      setLoading(false);
-      return toast.error(error.message);
-    }
-    for (const op of data ?? []) {
-      const h = await hashPin(pin, op.pin_salt);
-      if (h === op.pin_hash) {
-        setLoading(false);
-        toast.success(`Welcome, ${op.name}`);
-        onUnlock({ id: op.id, name: op.name });
-        return;
-      }
-    }
+    const { data, error } = await (supabase as any).rpc("verify_operator_pin", {
+      _restaurant_id: restaurantId,
+      _pin: pin,
+    });
     setLoading(false);
+    if (error) return toast.error(error.message);
+    const op = Array.isArray(data) ? data[0] : data;
+    if (op?.id) {
+      toast.success(`Welcome, ${op.name}`);
+      onUnlock({ id: op.id, name: op.name });
+      return;
+    }
     toast.error("Invalid PIN");
     setPin("");
   };
