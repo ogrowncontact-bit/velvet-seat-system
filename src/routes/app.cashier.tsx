@@ -6,7 +6,7 @@ import { fetchTables, qk } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, X, Loader2, Trash2, Receipt, Lock } from "lucide-react";
-import { formatMoney, hashPin, PAYMENT_METHODS, type PaymentMethod } from "@/lib/pos";
+import { formatMoney, PAYMENT_METHODS, type PaymentMethod } from "@/lib/pos";
 
 export const Route = createFileRoute("/app/cashier")({ component: CashierPage });
 
