@@ -18,12 +18,22 @@ function SettingsPage() {
   const [defaultDeposit, setDeposit] = useState("0");
   const [saving, setSaving] = useState(false);
 
+  const [policy, setPolicy] = useState<"none" | "card" | "deposit" | "fine">("none");
+  const [noShowDeposit, setNoShowDeposit] = useState("0");
+  const [noShowFine, setNoShowFine] = useState("0");
+  const [offerTimeout, setOfferTimeout] = useState("10");
+  const [savingPolicy, setSavingPolicy] = useState(false);
+
   useEffect(() => {
     if (restaurant) {
       setName(restaurant.name);
       setTz(restaurant.timezone);
       setCurrency(restaurant.currency);
       setDeposit(String(restaurant.default_deposit ?? 0));
+      setPolicy((restaurant as any).no_show_policy ?? "none");
+      setNoShowDeposit(String((restaurant as any).no_show_deposit ?? 0));
+      setNoShowFine(String((restaurant as any).no_show_fine ?? 0));
+      setOfferTimeout(String((restaurant as any).offer_timeout_minutes ?? 10));
     }
   }, [restaurant]);
 
@@ -49,6 +59,21 @@ function SettingsPage() {
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Venue updated");
+    qc.invalidateQueries({ queryKey: qk.myRestaurants });
+  };
+
+  const savePolicy = async () => {
+    if (!restaurantId) return;
+    setSavingPolicy(true);
+    const { error } = await supabase.from("restaurants").update({
+      no_show_policy: policy,
+      no_show_deposit: parseFloat(noShowDeposit) || 0,
+      no_show_fine: parseFloat(noShowFine) || 0,
+      offer_timeout_minutes: Math.max(1, parseInt(offerTimeout) || 10),
+    } as any).eq("id", restaurantId);
+    setSavingPolicy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Policy updated");
     qc.invalidateQueries({ queryKey: qk.myRestaurants });
   };
 
