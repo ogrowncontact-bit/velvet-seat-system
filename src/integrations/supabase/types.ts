@@ -473,6 +473,202 @@ export type Database = {
           },
         ]
       }
+      message_log: {
+        Row: {
+          body: string | null
+          created_at: string
+          direction: Database["public"]["Enums"]["message_direction"]
+          error: string | null
+          from_phone: string | null
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"] | null
+          provider_sid: string | null
+          reservation_id: string | null
+          restaurant_id: string
+          status: Database["public"]["Enums"]["message_status"]
+          to_phone: string | null
+          waitlist_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          direction: Database["public"]["Enums"]["message_direction"]
+          error?: string | null
+          from_phone?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["message_kind"] | null
+          provider_sid?: string | null
+          reservation_id?: string | null
+          restaurant_id: string
+          status?: Database["public"]["Enums"]["message_status"]
+          to_phone?: string | null
+          waitlist_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          direction?: Database["public"]["Enums"]["message_direction"]
+          error?: string | null
+          from_phone?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["message_kind"] | null
+          provider_sid?: string | null
+          reservation_id?: string | null
+          restaurant_id?: string
+          status?: Database["public"]["Enums"]["message_status"]
+          to_phone?: string | null
+          waitlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_log_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_log_waitlist_id_fkey"
+            columns: ["waitlist_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          last_error: string | null
+          payload: Json
+          processed_at: string | null
+          reservation_id: string | null
+          restaurant_id: string
+          scheduled_for: string
+          to_phone: string
+          waitlist_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          reservation_id?: string | null
+          restaurant_id: string
+          scheduled_for?: string
+          to_phone: string
+          waitlist_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          reservation_id?: string | null
+          restaurant_id?: string
+          scheduled_for?: string
+          to_phone?: string
+          waitlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_queue_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_queue_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_queue_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_queue_waitlist_id_fkey"
+            columns: ["waitlist_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_templates: {
+        Row: {
+          body: string
+          created_at: string
+          enabled: boolean
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_templates_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_admins: {
         Row: {
           created_at: string
@@ -670,6 +866,8 @@ export type Database = {
           timezone: string
           updated_at: string
           website: string | null
+          whatsapp_enabled: boolean
+          whatsapp_from: string | null
           whatsapp_phone: string | null
         }
         Insert: {
@@ -698,6 +896,8 @@ export type Database = {
           timezone?: string
           updated_at?: string
           website?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_from?: string | null
           whatsapp_phone?: string | null
         }
         Update: {
@@ -726,6 +926,8 @@ export type Database = {
           timezone?: string
           updated_at?: string
           website?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_from?: string | null
           whatsapp_phone?: string | null
         }
         Relationships: []
@@ -1065,6 +1267,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      seed_message_templates: {
+        Args: { _restaurant_id: string }
+        Returns: undefined
+      }
       verify_operator_pin: {
         Args: { _pin: string; _restaurant_id: string }
         Returns: {
@@ -1076,6 +1282,16 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "manager" | "host" | "staff"
+      message_direction: "out" | "in"
+      message_kind:
+        | "confirmation"
+        | "reminder_24h"
+        | "reminder_2h"
+        | "waitlist_offer"
+        | "reply_confirmed"
+        | "reply_cancelled"
+        | "test"
+      message_status: "queued" | "sent" | "delivered" | "failed" | "received"
       no_show_policy: "none" | "card" | "deposit" | "fine"
       reservation_source:
         | "widget"
@@ -1227,6 +1443,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "manager", "host", "staff"],
+      message_direction: ["out", "in"],
+      message_kind: [
+        "confirmation",
+        "reminder_24h",
+        "reminder_2h",
+        "waitlist_offer",
+        "reply_confirmed",
+        "reply_cancelled",
+        "test",
+      ],
+      message_status: ["queued", "sent", "delivered", "failed", "received"],
       no_show_policy: ["none", "card", "deposit", "fine"],
       reservation_source: [
         "widget",
