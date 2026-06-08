@@ -29,6 +29,7 @@ import { Route as AppBookingsRouteImport } from './routes/app.bookings'
 import { Route as AppBillingRouteImport } from './routes/app.billing'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
+import { Route as ApiPublicHooksWhatsappDispatchRouteImport } from './routes/api/public/hooks/whatsapp-dispatch'
 
 const RestaurantsRoute = RestaurantsRouteImport.update({
   id: '/restaurants',
@@ -130,6 +131,12 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicHooksWhatsappDispatchRoute =
+  ApiPublicHooksWhatsappDispatchRouteImport.update({
+    id: '/api/public/hooks/whatsapp-dispatch',
+    path: '/api/public/hooks/whatsapp-dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/app/waitlist': typeof AppWaitlistRoute
   '/r/$slug': typeof RSlugRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -173,6 +181,7 @@ export interface FileRoutesByTo {
   '/app/waitlist': typeof AppWaitlistRoute
   '/r/$slug': typeof RSlugRoute
   '/app': typeof AppIndexRoute
+  '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -196,6 +205,7 @@ export interface FileRoutesById {
   '/app/waitlist': typeof AppWaitlistRoute
   '/r/$slug': typeof RSlugRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/app/waitlist'
     | '/r/$slug'
     | '/app/'
+    | '/api/public/hooks/whatsapp-dispatch'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/app/waitlist'
     | '/r/$slug'
     | '/app'
+    | '/api/public/hooks/whatsapp-dispatch'
   id:
     | '__root__'
     | '/'
@@ -263,6 +275,7 @@ export interface FileRouteTypes {
     | '/app/waitlist'
     | '/r/$slug'
     | '/app/'
+    | '/api/public/hooks/whatsapp-dispatch'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -273,6 +286,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RestaurantsRoute: typeof RestaurantsRoute
   RSlugRoute: typeof RSlugRoute
+  ApiPublicHooksWhatsappDispatchRoute: typeof ApiPublicHooksWhatsappDispatchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -417,6 +431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/hooks/whatsapp-dispatch': {
+      id: '/api/public/hooks/whatsapp-dispatch'
+      path: '/api/public/hooks/whatsapp-dispatch'
+      fullPath: '/api/public/hooks/whatsapp-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksWhatsappDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -462,6 +483,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RestaurantsRoute: RestaurantsRoute,
   RSlugRoute: RSlugRoute,
+  ApiPublicHooksWhatsappDispatchRoute: ApiPublicHooksWhatsappDispatchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -84,7 +84,7 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-dispatch")({
               .from("message_templates")
               .select("body, enabled")
               .eq("restaurant_id", row.restaurant_id)
-              .eq("kind", row.kind)
+              .eq("kind", row.kind as any)
               .maybeSingle();
 
             if (!tpl || !tpl.enabled) {
