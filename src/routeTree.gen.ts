@@ -29,6 +29,7 @@ import { Route as AppBookingsRouteImport } from './routes/app.bookings'
 import { Route as AppBillingRouteImport } from './routes/app.billing'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
+import { Route as ApiPublicHooksWhatsappWebhookRouteImport } from './routes/api/public/hooks/whatsapp-webhook'
 import { Route as ApiPublicHooksWhatsappDispatchRouteImport } from './routes/api/public/hooks/whatsapp-dispatch'
 
 const RestaurantsRoute = RestaurantsRouteImport.update({
@@ -131,6 +132,12 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicHooksWhatsappWebhookRoute =
+  ApiPublicHooksWhatsappWebhookRouteImport.update({
+    id: '/api/public/hooks/whatsapp-webhook',
+    path: '/api/public/hooks/whatsapp-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksWhatsappDispatchRoute =
   ApiPublicHooksWhatsappDispatchRouteImport.update({
     id: '/api/public/hooks/whatsapp-dispatch',
@@ -160,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/r/$slug': typeof RSlugRoute
   '/app/': typeof AppIndexRoute
   '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
+  '/api/public/hooks/whatsapp-webhook': typeof ApiPublicHooksWhatsappWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +190,7 @@ export interface FileRoutesByTo {
   '/r/$slug': typeof RSlugRoute
   '/app': typeof AppIndexRoute
   '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
+  '/api/public/hooks/whatsapp-webhook': typeof ApiPublicHooksWhatsappWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +215,7 @@ export interface FileRoutesById {
   '/r/$slug': typeof RSlugRoute
   '/app/': typeof AppIndexRoute
   '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
+  '/api/public/hooks/whatsapp-webhook': typeof ApiPublicHooksWhatsappWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/app/'
     | '/api/public/hooks/whatsapp-dispatch'
+    | '/api/public/hooks/whatsapp-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/app'
     | '/api/public/hooks/whatsapp-dispatch'
+    | '/api/public/hooks/whatsapp-webhook'
   id:
     | '__root__'
     | '/'
@@ -276,6 +288,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/app/'
     | '/api/public/hooks/whatsapp-dispatch'
+    | '/api/public/hooks/whatsapp-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -287,6 +300,7 @@ export interface RootRouteChildren {
   RestaurantsRoute: typeof RestaurantsRoute
   RSlugRoute: typeof RSlugRoute
   ApiPublicHooksWhatsappDispatchRoute: typeof ApiPublicHooksWhatsappDispatchRoute
+  ApiPublicHooksWhatsappWebhookRoute: typeof ApiPublicHooksWhatsappWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -431,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/hooks/whatsapp-webhook': {
+      id: '/api/public/hooks/whatsapp-webhook'
+      path: '/api/public/hooks/whatsapp-webhook'
+      fullPath: '/api/public/hooks/whatsapp-webhook'
+      preLoaderRoute: typeof ApiPublicHooksWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/whatsapp-dispatch': {
       id: '/api/public/hooks/whatsapp-dispatch'
       path: '/api/public/hooks/whatsapp-dispatch'
@@ -484,7 +505,18 @@ const rootRouteChildren: RootRouteChildren = {
   RestaurantsRoute: RestaurantsRoute,
   RSlugRoute: RSlugRoute,
   ApiPublicHooksWhatsappDispatchRoute: ApiPublicHooksWhatsappDispatchRoute,
+  ApiPublicHooksWhatsappWebhookRoute: ApiPublicHooksWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
