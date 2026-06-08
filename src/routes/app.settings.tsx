@@ -157,22 +157,8 @@ function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-border bg-card overflow-hidden">
-        <div className="p-6 border-b border-border"><h2 className="font-medium">Integrations</h2></div>
-        <div className="divide-y divide-border">
-          {[
-            { name: "WhatsApp Business", status: "Coming soon" },
-            { name: "Stripe payments", status: "Coming soon" },
-            { name: "Google Reserve", status: "Coming soon" },
-            { name: "Instagram bio link", status: "Coming soon" },
-          ].map((i) => (
-            <div key={i.name} className="flex items-center justify-between p-5 text-sm">
-              <span>{i.name}</span>
-              <span className="rounded bg-muted text-muted-foreground px-2 py-1 text-[10px] font-bold uppercase tracking-wider">{i.status}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      {restaurantId && <WhatsAppSection restaurantId={restaurantId} restaurant={restaurant as any} />}
+
       <style>{`.input{width:100%;height:42px;padding:0 14px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-background);font-size:14px}`}</style>
     </div>
   );
