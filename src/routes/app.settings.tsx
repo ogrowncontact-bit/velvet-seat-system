@@ -172,3 +172,157 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+const KINDS = [
+  { k: "confirmation", label: "Confirmação (imediata)" },
+  { k: "reminder_24h", label: "Lembrete — 24h antes" },
+  { k: "reminder_2h", label: "Lembrete — 2h antes" },
+  { k: "waitlist_offer", label: "Oferta de vaga (fila)" },
+  { k: "reply_confirmed", label: "Resposta: confirmada" },
+  { k: "reply_cancelled", label: "Resposta: cancelada" },
+] as const;
+
+function WhatsAppSection({ restaurantId, restaurant }: { restaurantId: string; restaurant: any }) {
+  const qc = useQueryClient();
+  const [enabled, setEnabled] = useState(false);
+  const [fromNumber, setFromNumber] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (restaurant) {
+      setEnabled(!!restaurant.whatsapp_enabled);
+      setFromNumber(restaurant.whatsapp_from ?? "");
+    }
+  }, [restaurant]);
+
+  const templates = useQuery({
+    queryKey: ["msg-templates", restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("message_templates")
+        .select("id, kind, body, enabled")
+        .eq("restaurant_id", restaurantId);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const log = useQuery({
+    queryKey: ["msg-log", restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("message_log")
+        .select("id, direction, kind, to_phone, from_phone, body, status, error, created_at")
+        .eq("restaurant_id", restaurantId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+    refetchInterval: 30_000,
+  });
+
+  const saveVenueWA = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("restaurants").update({
+      whatsapp_enabled: enabled, whatsapp_from: fromNumber || null,
+    } as any).eq("id", restaurantId);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("WhatsApp atualizado");
+    qc.invalidateQueries({ queryKey: qk.myRestaurants });
+  };
+
+  const updateTpl = async (id: string, patch: { body?: string; enabled?: boolean }) => {
+    const { error } = await supabase.from("message_templates").update(patch).eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["msg-templates", restaurantId] });
+  };
+
+  return (
+    <section className="rounded-3xl border border-border bg-card overflow-hidden">
+      <div className="p-6 border-b border-border">
+        <h2 className="font-medium">WhatsApp</h2>
+        <p className="text-xs text-muted-foreground mt-1">
+          Confirmações, lembretes e oferta de fila via Twilio. Variáveis: <code>{"{{guest}}"}</code> <code>{"{{time}}"}</code> <code>{"{{party}}"}</code> <code>{"{{restaurant}}"}</code> <code>{"{{minutes}}"}</code>.
+        </p>
+      </div>
+      <div className="p-6 space-y-4">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+          <div>
+            <div className="text-sm font-medium">Envios automáticos</div>
+            <div className="text-xs text-muted-foreground">Ative para começar a disparar mensagens.</div>
+          </div>
+          <label className="inline-flex items-center cursor-pointer">
+            <input type="checkbox" className="sr-only" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+            <span className={`relative inline-block w-10 h-6 rounded-full transition ${enabled ? "bg-foreground" : "bg-muted"}`}>
+              <span className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-background transition ${enabled ? "translate-x-4" : ""}`} />
+            </span>
+          </label>
+        </div>
+        <Field label="Número WhatsApp do restaurante (E.164)">
+          <input value={fromNumber} onChange={(e) => setFromNumber(e.target.value)} placeholder="+5511999999999" className="input" />
+        </Field>
+        <button onClick={saveVenueWA} disabled={saving} className="h-10 px-5 rounded-lg bg-foreground text-background text-sm font-medium inline-flex items-center gap-2 disabled:opacity-50">
+          {saving && <Loader2 className="size-4 animate-spin" />} Salvar
+        </button>
+      </div>
+
+      <div className="border-t border-border p-6 space-y-4">
+        <h3 className="text-sm font-medium">Modelos de mensagem</h3>
+        {templates.isLoading ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : (
+          KINDS.map(({ k, label }) => {
+            const tpl = templates.data?.find((t) => t.kind === k);
+            if (!tpl) return null;
+            return (
+              <div key={tpl.id} className="rounded-lg border border-border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider">{label}</span>
+                  <label className="text-xs inline-flex items-center gap-1.5">
+                    <input type="checkbox" checked={tpl.enabled} onChange={(e) => updateTpl(tpl.id, { enabled: e.target.checked })} />
+                    Ativo
+                  </label>
+                </div>
+                <textarea
+                  defaultValue={tpl.body}
+                  onBlur={(e) => e.target.value !== tpl.body && updateTpl(tpl.id, { body: e.target.value })}
+                  rows={2}
+                  className="w-full text-sm p-3 rounded border border-border bg-background"
+                />
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="border-t border-border p-6">
+        <h3 className="text-sm font-medium mb-3">Histórico ({log.data?.length ?? 0})</h3>
+        <div className="divide-y divide-border max-h-96 overflow-y-auto rounded-lg border border-border">
+          {(log.data ?? []).map((m) => (
+            <div key={m.id} className="p-3 text-xs flex items-start gap-3">
+              <span className={`mt-0.5 inline-block size-5 rounded-full grid place-items-center text-[10px] font-bold ${m.direction === "in" ? "bg-blue-500/15 text-blue-700 dark:text-blue-400" : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"}`}>
+                {m.direction === "in" ? "↓" : "↑"}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono tnum">{m.direction === "in" ? m.from_phone : m.to_phone}</span>
+                  {m.kind && <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] uppercase tracking-wider">{m.kind}</span>}
+                  <span className={`rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wider ${
+                    m.status === "failed" ? "bg-rose-500/15 text-rose-700 dark:text-rose-400"
+                    : m.status === "received" ? "bg-blue-500/15 text-blue-700 dark:text-blue-400"
+                    : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"}`}>{m.status}</span>
+                  <span className="text-muted-foreground tnum ml-auto">{new Date(m.created_at).toLocaleString()}</span>
+                </div>
+                {m.body && <div className="mt-1 text-muted-foreground line-clamp-2">{m.body}</div>}
+                {m.error && <div className="mt-1 text-rose-600 dark:text-rose-400">⚠ {m.error}</div>}
+              </div>
+            </div>
+          ))}
+          {log.data?.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma mensagem ainda.</div>}
+        </div>
+      </div>
+    </section>
+  );
+}
