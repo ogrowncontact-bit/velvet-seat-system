@@ -730,6 +730,7 @@ export type Database = {
           status: Database["public"]["Enums"]["reservation_status"]
           table_id: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -749,6 +750,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["reservation_status"]
           table_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -768,6 +770,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["reservation_status"]
           table_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1225,6 +1228,7 @@ export type Database = {
         Args: { _restaurant_id: string }
         Returns: number
       }
+      get_user_role: { Args: { _uid: string }; Returns: string }
       has_role: {
         Args: {
           _restaurant_id: string
