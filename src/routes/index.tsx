@@ -64,14 +64,17 @@ function Nav() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <Link to="/cliente/login" className="hidden md:inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted">
+            Sou cliente
+          </Link>
           <Link to="/staff/login" className="hidden sm:inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted">
-            Sign in
+            Sou restaurante
           </Link>
           <Link
-            to="/book"
+            to="/restaurants"
             className="hidden sm:inline-flex h-9 items-center rounded-lg border border-border bg-card px-4 text-sm font-medium hover:bg-muted"
           >
-            Book a table
+            Reservar mesa
           </Link>
           <Link
             to="/staff/login"
