@@ -64,7 +64,7 @@ function Nav() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link to="/login" className="hidden sm:inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted">
+          <Link to="/staff/login" className="hidden sm:inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted">
             Sign in
           </Link>
           <Link
@@ -74,7 +74,7 @@ function Nav() {
             Book a table
           </Link>
           <Link
-            to="/login"
+            to="/staff/login"
             className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-foreground px-4 text-sm font-medium text-background hover:opacity-90"
           >
             Get started <ArrowRight className="size-3.5" />
@@ -102,7 +102,7 @@ function Hero() {
           occupancy, and effortless guest communication — in one focused workspace.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <Link to="/login" className="inline-flex h-12 items-center gap-2 rounded-xl bg-foreground px-6 text-sm font-medium text-background shadow-elevated hover:opacity-90 transition-opacity">
+          <Link to="/staff/login" className="inline-flex h-12 items-center gap-2 rounded-xl bg-foreground px-6 text-sm font-medium text-background shadow-elevated hover:opacity-90 transition-opacity">
             Open your dashboard <ArrowRight className="size-4" />
           </Link>
           <Link to="/book" className="inline-flex h-12 items-center gap-2 rounded-xl border border-border bg-card px-6 text-sm font-medium hover:bg-muted">
@@ -295,7 +295,7 @@ function Pricing() {
               ))}
             </ul>
             <div className={`text-xs mb-4 ${p.featured ? "text-background/60" : "text-muted-foreground"}`}>+ {p.fee}</div>
-            <Link to="/login" className={`h-11 rounded-xl text-sm font-medium grid place-items-center ${p.featured ? "bg-background text-foreground hover:opacity-90" : "bg-foreground text-background hover:opacity-90"}`}>
+            <Link to="/staff/login" className={`h-11 rounded-xl text-sm font-medium grid place-items-center ${p.featured ? "bg-background text-foreground hover:opacity-90" : "bg-foreground text-background hover:opacity-90"}`}>
               {p.cta}
             </Link>
           </div>
@@ -371,7 +371,7 @@ function FinalCTA() {
           Join the restaurants designing the next decade of hospitality.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <Link to="/login" className="inline-flex h-12 items-center gap-2 rounded-xl bg-background text-foreground px-6 text-sm font-medium hover:opacity-90">
+          <Link to="/staff/login" className="inline-flex h-12 items-center gap-2 rounded-xl bg-background text-foreground px-6 text-sm font-medium hover:opacity-90">
             Sign in <ArrowRight className="size-4" />
           </Link>
           <a href="#pricing" className="inline-flex h-12 items-center rounded-xl border border-background/20 px-6 text-sm font-medium hover:bg-background/10">
@@ -398,7 +398,7 @@ function Footer() {
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Product</div>
             <a href="#features" className="block hover:text-foreground/80">Platform</a>
             <a href="#pricing" className="block hover:text-foreground/80">Pricing</a>
-            <Link to="/login" className="block hover:text-foreground/80">Dashboard</Link>
+            <Link to="/staff/login" className="block hover:text-foreground/80">Dashboard</Link>
           </div>
           <div className="space-y-2">
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Company</div>
