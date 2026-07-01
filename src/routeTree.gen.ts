@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RestaurantsRouteImport } from './routes/restaurants'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClienteIndexRouteImport } from './routes/cliente.index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as StaffLoginRouteImport } from './routes/staff.login'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
@@ -50,6 +52,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClienteRoute = ClienteRouteImport.update({
+  id: '/cliente',
+  path: '/cliente',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BookRoute = BookRouteImport.update({
   id: '/book',
   path: '/book',
@@ -64,6 +71,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ClienteIndexRoute = ClienteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ClienteRoute,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
@@ -81,9 +93,9 @@ const RSlugRoute = RSlugRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClienteLoginRoute = ClienteLoginRouteImport.update({
-  id: '/cliente/login',
-  path: '/cliente/login',
-  getParentRoute: () => rootRouteImport,
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => ClienteRoute,
 } as any)
 const AppWaitlistRoute = AppWaitlistRouteImport.update({
   id: '/waitlist',
@@ -167,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/book': typeof BookRoute
+  '/cliente': typeof ClienteRouteWithChildren
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
@@ -187,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/r/$slug': typeof RSlugRoute
   '/staff/login': typeof StaffLoginRoute
   '/app/': typeof AppIndexRoute
+  '/cliente/': typeof ClienteIndexRoute
   '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
   '/api/public/hooks/whatsapp-webhook': typeof ApiPublicHooksWhatsappWebhookRoute
 }
@@ -213,6 +227,7 @@ export interface FileRoutesByTo {
   '/r/$slug': typeof RSlugRoute
   '/staff/login': typeof StaffLoginRoute
   '/app': typeof AppIndexRoute
+  '/cliente': typeof ClienteIndexRoute
   '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
   '/api/public/hooks/whatsapp-webhook': typeof ApiPublicHooksWhatsappWebhookRoute
 }
@@ -221,6 +236,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/book': typeof BookRoute
+  '/cliente': typeof ClienteRouteWithChildren
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
@@ -241,6 +257,7 @@ export interface FileRoutesById {
   '/r/$slug': typeof RSlugRoute
   '/staff/login': typeof StaffLoginRoute
   '/app/': typeof AppIndexRoute
+  '/cliente/': typeof ClienteIndexRoute
   '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
   '/api/public/hooks/whatsapp-webhook': typeof ApiPublicHooksWhatsappWebhookRoute
 }
@@ -250,6 +267,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/book'
+    | '/cliente'
     | '/login'
     | '/reset-password'
     | '/restaurants'
@@ -270,6 +288,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/staff/login'
     | '/app/'
+    | '/cliente/'
     | '/api/public/hooks/whatsapp-dispatch'
     | '/api/public/hooks/whatsapp-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -296,6 +315,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/staff/login'
     | '/app'
+    | '/cliente'
     | '/api/public/hooks/whatsapp-dispatch'
     | '/api/public/hooks/whatsapp-webhook'
   id:
@@ -303,6 +323,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/book'
+    | '/cliente'
     | '/login'
     | '/reset-password'
     | '/restaurants'
@@ -323,6 +344,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/staff/login'
     | '/app/'
+    | '/cliente/'
     | '/api/public/hooks/whatsapp-dispatch'
     | '/api/public/hooks/whatsapp-webhook'
   fileRoutesById: FileRoutesById
@@ -331,11 +353,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   BookRoute: typeof BookRoute
+  ClienteRoute: typeof ClienteRouteWithChildren
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RestaurantsRoute: typeof RestaurantsRoute
   AdminLoginRoute: typeof AdminLoginRoute
-  ClienteLoginRoute: typeof ClienteLoginRoute
   RSlugRoute: typeof RSlugRoute
   StaffLoginRoute: typeof StaffLoginRoute
   ApiPublicHooksWhatsappDispatchRoute: typeof ApiPublicHooksWhatsappDispatchRoute
@@ -365,6 +387,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cliente': {
+      id: '/cliente'
+      path: '/cliente'
+      fullPath: '/cliente'
+      preLoaderRoute: typeof ClienteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/book': {
       id: '/book'
       path: '/book'
@@ -385,6 +414,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/cliente/': {
+      id: '/cliente/'
+      path: '/'
+      fullPath: '/cliente/'
+      preLoaderRoute: typeof ClienteIndexRouteImport
+      parentRoute: typeof ClienteRoute
     }
     '/app/': {
       id: '/app/'
@@ -409,10 +445,10 @@ declare module '@tanstack/react-router' {
     }
     '/cliente/login': {
       id: '/cliente/login'
-      path: '/cliente/login'
+      path: '/login'
       fullPath: '/cliente/login'
       preLoaderRoute: typeof ClienteLoginRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ClienteRoute
     }
     '/app/waitlist': {
       id: '/app/waitlist'
@@ -556,15 +592,28 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface ClienteRouteChildren {
+  ClienteLoginRoute: typeof ClienteLoginRoute
+  ClienteIndexRoute: typeof ClienteIndexRoute
+}
+
+const ClienteRouteChildren: ClienteRouteChildren = {
+  ClienteLoginRoute: ClienteLoginRoute,
+  ClienteIndexRoute: ClienteIndexRoute,
+}
+
+const ClienteRouteWithChildren =
+  ClienteRoute._addFileChildren(ClienteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   BookRoute: BookRoute,
+  ClienteRoute: ClienteRouteWithChildren,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RestaurantsRoute: RestaurantsRoute,
   AdminLoginRoute: AdminLoginRoute,
-  ClienteLoginRoute: ClienteLoginRoute,
   RSlugRoute: RSlugRoute,
   StaffLoginRoute: StaffLoginRoute,
   ApiPublicHooksWhatsappDispatchRoute: ApiPublicHooksWhatsappDispatchRoute,
