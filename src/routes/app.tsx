@@ -158,7 +158,7 @@ function AppLayout() {
                 <DropdownMenuItem
                   onClick={async () => {
                     await signOut();
-                    navigate({ to: "/login" });
+                    navigate({ to: "/staff/login" });
                   }}
                   className="text-destructive focus:text-destructive"
                 >
