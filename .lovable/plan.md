@@ -1,48 +1,64 @@
-# Fase 6 — Automação WhatsApp via Twilio
+# Separação em 3 perfis de acesso
 
-## O que vai ser entregue
+A plataforma hoje tem um único `/login` que serve admin geral e funcionários do restaurante, e `/book` que é totalmente público (sem conta). Vou separar em três experiências distintas, com rotas, telas de login e dashboards próprios.
 
-1. **Templates configuráveis por restaurante** — mensagens de confirmação, lembrete 24h, lembrete 2h e oferta de vaga, com variáveis `{{guest}}`, `{{time}}`, `{{party}}`, `{{restaurant}}`.
-2. **Envio automático**:
-   - Confirmação dispara ao criar reserva (trigger de banco enfileira).
-   - Lembrete 24h e lembrete 2h disparam por cron a cada 15 min.
-   - Oferta de vaga (waitlist) dispara quando `promote_next_waitlist` muda status para `offered`.
-3. **Recebimento (cancelar/confirmar pelo WhatsApp)**:
-   - Endpoint público `/api/public/hooks/whatsapp-webhook` recebe respostas do Twilio.
-   - Palavras-chave: `CONFIRMAR` / `CONFIRMO` → marca reserva `confirmed`; `CANCELAR` → marca `cancelled`.
-   - Resposta automática de confirmação ao cliente.
-4. **Histórico completo** em `message_log` (direção, status, payload, erro, reserva relacionada).
-5. **UI** em `app.settings.tsx` (nova aba "WhatsApp"): editar templates, ativar/desativar tipos, ver últimas 50 mensagens com status. Botão de teste manual.
+## Os 3 perfis
 
-## Backend
+| Perfil | Rota de login | Após login |
+|---|---|---|
+| **Admin geral** (você) | `/admin/login` | `/admin` — painel da plataforma (restaurantes, métricas globais, billing) |
+| **Restaurante** (dono/garçom/gerente) | `/staff/login` | `/app` — painel atual de operação (mesas, reservas, caixa, etc.) |
+| **Cliente** (faz reservas) | `/cliente/login` | `/cliente` — "Minhas reservas" + botão "Nova reserva" |
 
-**Migrations:**
-- `message_templates(restaurant_id, kind enum, body text, enabled bool)` — kind: `confirmation|reminder_24h|reminder_2h|waitlist_offer|reply_confirmed|reply_cancelled`. Seed com defaults em PT-BR no insert do restaurante.
-- `message_log(restaurant_id, reservation_id?, waitlist_id?, to_phone, body, direction enum in|out, kind, status enum queued|sent|delivered|failed|received, provider_sid, error, created_at)`.
-- `message_queue(restaurant_id, kind, payload jsonb, scheduled_for timestamptz, processed_at, attempts)` — fila simples processada pelo cron.
-- `restaurants`: colunas `whatsapp_enabled bool`, `whatsapp_from text` (número Twilio E.164).
-- Trigger em `reservations` AFTER INSERT → enfileira `confirmation` imediata + `reminder_24h` e `reminder_2h` agendados.
-- Trigger em `waitlist` AFTER UPDATE quando status vira `offered` → enfileira `waitlist_offer`.
+Cada login tem visual e copy próprios para ficar óbvio onde a pessoa está entrando.
 
-**Server routes:**
-- `/api/public/hooks/whatsapp-webhook` (POST, x-www-form-urlencoded do Twilio) — valida assinatura `X-Twilio-Signature`, parseia `From` + `Body`, casa reserva ativa pelo telefone, atualiza status e responde TwiML.
-- `/api/public/hooks/whatsapp-dispatch` (POST, autenticado por `apikey` anon) — chamado pelo cron a cada 15 min: busca itens em `message_queue` com `scheduled_for <= now()`, renderiza template, envia via Twilio gateway, grava em `message_log`.
+## Como o sistema decide o perfil
 
-**pg_cron:** job a cada 15 minutos chamando `/api/public/hooks/whatsapp-dispatch`.
+Já existe a tabela `platform_admins` (admin geral) e `restaurant_members` (staff). Vou adicionar:
+- **`customer_accounts`** (novo) — liga `auth.users.id` a um registro de cliente (nome, telefone, e-mail). Criada automaticamente no signup do cliente.
+- Função `public.get_user_role(uid)` que retorna `'admin' | 'staff' | 'customer' | null` — usada para decidir o destino correto após login e bloquear acessos cruzados.
 
-**Twilio:** via connector `twilio` (gateway). Vou pedir pra você conectar quando aprovar.
+Regras de acesso:
+- `/admin/*` → só `platform_admins`
+- `/app/*` → só quem está em `restaurant_members` (ou admin)
+- `/cliente/*` → qualquer pessoa autenticada (admin/staff também podem acessar, mas geralmente entram pelo painel deles)
 
-## Frontend
+Se alguém fizer login pela porta errada (ex.: cliente em `/staff/login`), redireciono pro destino certo automaticamente.
 
-- `app.settings.tsx` aba "WhatsApp": toggle global, número From, editor de cada template (textarea + preview com variáveis), botão "Enviar teste".
-- Componente `<MessageHistory />`: tabela com direção (↑/↓), telefone, kind, status, hora, erro. Auto-refresh 30s.
+## Fluxo do cliente (novo)
+
+1. `/cliente/login` — login + cadastro (e-mail/senha + Google) específico pra cliente.
+2. `/cliente` — lista das reservas (passadas e futuras), botão "Cancelar" e "Nova reserva".
+3. `/book` continua existindo público (para QR code do restaurante e link de Instagram), mas:
+   - se o cliente estiver logado, pré-preenche nome/telefone/email
+   - oferece "Salvar nas minhas reservas" se não estiver logado
+4. Reserva criada por cliente logado é vinculada via `customer_accounts.user_id` → `reservations.customer_id`.
+
+## Mudanças técnicas
+
+**Backend (1 migration):**
+- Tabela `customer_accounts` (user_id PK → auth.users, name, phone, email, created_at).
+- Trigger no signup que cria `customer_accounts` quando o `raw_user_meta_data.role = 'customer'`.
+- Função `get_user_role`.
+- RLS: cliente pode ler/cancelar só suas próprias reservas (via `customer_id` casando com seu `customer_accounts`).
+
+**Frontend:**
+- Substituir `/login` por 3 telas: `/admin/login`, `/staff/login`, `/cliente/login` (mantém `/login` como redirect para `/staff/login` por compatibilidade).
+- Novo layout `src/routes/cliente.tsx` + `src/routes/cliente.index.tsx` (lista de reservas).
+- `src/routes/admin.tsx` (gate de admin) + mover `app.admin.tsx` para fora do `/app`.
+- Atualizar a landing `/` com 3 CTAs: "Sou cliente", "Sou restaurante", "Admin".
+- Hook `useAuth` ganha `role` derivada de `get_user_role`.
+
+**Booking público:**
+- `/book` segue funcionando sem login. Se o cliente estiver logado, mostra "Olá, {nome}" e pré-preenche dados.
 
 ## Ordem de execução
 
-1. Migration (tabelas + triggers + seed dos templates default).
-2. Server routes (webhook + dispatch).
-3. Cron job (insert tool, depois da migration).
-4. UI de settings + histórico.
-5. Pedir conexão Twilio.
+1. Migration + função de role.
+2. Refatoração do `useAuth` para incluir `role`.
+3. Três telas de login + redirects.
+4. Layout `/cliente` + página "Minhas reservas".
+5. Mover console admin para `/admin`.
+6. Atualizar a landing com os 3 CTAs.
 
-Aprova? Depois de aprovar eu mando a migration pra você confirmar e sigo na sequência.
+Aprova? Se quiser ajustar nomes de rotas (ex.: `/customer` em inglês, ou outro), me diz antes.

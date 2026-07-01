@@ -27,7 +27,7 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, role, roleLoading } = useAuth();
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { data: memberships, isLoading: loadingMemberships } = useMyRestaurants();
@@ -36,8 +36,11 @@ function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login", replace: true });
-  }, [user, loading, navigate]);
+    if (!loading && !user) navigate({ to: "/staff/login", replace: true });
+    else if (user && !roleLoading && role === "customer") {
+      navigate({ to: "/cliente", replace: true });
+    }
+  }, [user, loading, role, roleLoading, navigate]);
 
   if (loading || !user || loadingMemberships || loadingAdmin) {
     return (
@@ -155,7 +158,7 @@ function AppLayout() {
                 <DropdownMenuItem
                   onClick={async () => {
                     await signOut();
-                    navigate({ to: "/login" });
+                    navigate({ to: "/staff/login" });
                   }}
                   className="text-destructive focus:text-destructive"
                 >

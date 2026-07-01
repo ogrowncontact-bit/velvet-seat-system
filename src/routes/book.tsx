@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Calendar, Users, Clock, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/book")({
   head: () => ({ meta: [
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/book")({
 });
 
 function Book() {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [restaurants, setRestaurants] = useState<{ id: string; name: string }[]>([]);
   const [restaurantId, setRestaurantId] = useState<string>("");
@@ -34,6 +36,15 @@ function Book() {
     });
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      const meta = (user.user_metadata ?? {}) as { full_name?: string; phone?: string };
+      if (!name && meta.full_name) setName(meta.full_name);
+      if (!phone && meta.phone) setPhone(meta.phone);
+      if (!email && user.email) setEmail(user.email);
+    }
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const submit = async () => {
     if (!restaurantId) return toast.error("No restaurant available");
     setBusy(true);
@@ -43,6 +54,7 @@ function Book() {
       guest_name: name, guest_phone: phone || null, guest_email: email || null,
       party_size: party, reserved_at: reservedAt.toISOString(), notes: notes || null,
       status: "pending", source: "widget",
+      user_id: user?.id ?? null,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
