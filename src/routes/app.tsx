@@ -37,7 +37,7 @@ function AppLayout() {
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/staff/login", replace: true });
-    else if (user && !roleLoading && role === "customer") {
+    else if (user && !roleLoading && role === "customer" && user.user_metadata?.["role"] !== "staff") {
       navigate({ to: "/cliente", replace: true });
     }
   }, [user, loading, role, roleLoading, navigate]);
