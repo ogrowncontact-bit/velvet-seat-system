@@ -43,7 +43,7 @@ function StaffLogin() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/app`,
+          emailRedirectTo: `${window.location.origin}/confirm?type=signup`,
           data: { full_name: fullName, role: "staff" },
         },
       });
@@ -84,9 +84,23 @@ function StaffLogin() {
         <div className="rounded-2xl border border-border bg-card p-5 text-sm">
           <p className="font-medium mb-1">Verifique seu e-mail</p>
           <p className="text-muted-foreground">
-            Enviamos um link de confirmação para <strong>{email}</strong>. Depois de confirmar, você entra e cadastra o restaurante em 4 passos.
+            Enviamos um link de confirmação para <strong>{email}</strong>. Se o botão do e-mail não funcionar, copie e cole o endereço do link no navegador.
           </p>
-          <button onClick={() => { setSent(false); setMode("login"); }} className="mt-4 text-xs text-foreground underline">Voltar ao login</button>
+          <button
+            onClick={async () => {
+              const { error } = await supabase.auth.resend({
+                type: "signup",
+                email,
+                options: { emailRedirectTo: `${window.location.origin}/confirm?type=signup` },
+              });
+              if (error) toast.error(error.message);
+              else toast.success("Novo e-mail de confirmação enviado.");
+            }}
+            className="mt-4 h-10 w-full rounded-xl border border-border text-sm font-medium hover:bg-muted"
+          >
+            Reenviar e-mail de confirmação
+          </button>
+          <button onClick={() => { setSent(false); setMode("login"); }} className="mt-3 text-xs text-foreground underline">Voltar ao login</button>
         </div>
       ) : (
       <form onSubmit={submit} className="space-y-4">

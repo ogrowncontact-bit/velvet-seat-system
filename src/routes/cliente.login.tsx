@@ -43,7 +43,7 @@ function ClienteLogin() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/confirm?type=signup`,
             data: { full_name: name, phone, role: "customer" },
           },
         });
