@@ -39,16 +39,17 @@ function ClienteLogin() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/confirm?type=signup`,
             data: { full_name: name, phone, role: "customer" },
           },
         });
         if (error) throw error;
-        toast.success("Conta criada! Você já está logado.");
+        if (!data.session) toast.success("Enviamos um link de confirmação para seu e-mail.");
+        else toast.success("Conta criada! Você já está logado.");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
         if (error) throw error;

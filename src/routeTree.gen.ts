@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RestaurantsRouteImport } from './routes/restaurants'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ConfirmRouteImport } from './routes/confirm'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as AppRouteImport } from './routes/app'
@@ -50,6 +51,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmRoute = ConfirmRouteImport.update({
+  id: '/confirm',
+  path: '/confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClienteRoute = ClienteRouteImport.update({
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/book': typeof BookRoute
   '/cliente': typeof ClienteRouteWithChildren
+  '/confirm': typeof ConfirmRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/book': typeof BookRoute
+  '/confirm': typeof ConfirmRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/book': typeof BookRoute
   '/cliente': typeof ClienteRouteWithChildren
+  '/confirm': typeof ConfirmRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restaurants': typeof RestaurantsRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/book'
     | '/cliente'
+    | '/confirm'
     | '/login'
     | '/reset-password'
     | '/restaurants'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/book'
+    | '/confirm'
     | '/login'
     | '/reset-password'
     | '/restaurants'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/book'
     | '/cliente'
+    | '/confirm'
     | '/login'
     | '/reset-password'
     | '/restaurants'
@@ -354,6 +366,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   BookRoute: typeof BookRoute
   ClienteRoute: typeof ClienteRouteWithChildren
+  ConfirmRoute: typeof ConfirmRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RestaurantsRoute: typeof RestaurantsRoute
@@ -385,6 +398,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirm': {
+      id: '/confirm'
+      path: '/confirm'
+      fullPath: '/confirm'
+      preLoaderRoute: typeof ConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cliente': {
@@ -610,6 +630,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   BookRoute: BookRoute,
   ClienteRoute: ClienteRouteWithChildren,
+  ConfirmRoute: ConfirmRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RestaurantsRoute: RestaurantsRoute,
@@ -622,13 +643,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
