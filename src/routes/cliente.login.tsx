@@ -39,7 +39,7 @@ function ClienteLogin() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -48,7 +48,8 @@ function ClienteLogin() {
           },
         });
         if (error) throw error;
-        toast.success("Conta criada! Você já está logado.");
+        if (!data.session) toast.success("Enviamos um link de confirmação para seu e-mail.");
+        else toast.success("Conta criada! Você já está logado.");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
         if (error) throw error;
