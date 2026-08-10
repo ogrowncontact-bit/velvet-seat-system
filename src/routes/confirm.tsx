@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, routeForRole } from "@/lib/auth";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { PasteConfirmLink } from "@/components/paste-confirm-link";
 
 export const Route = createFileRoute("/confirm")({
   ssr: false,
@@ -116,13 +117,23 @@ function ConfirmPage() {
           </button>
         )}
         {status === "error" && (
-          <div className="space-y-2">
-            <Link to="/staff/login" className="block w-full h-11 leading-[2.75rem] rounded-xl bg-foreground text-background text-sm font-medium">
-              Ir para o login
-            </Link>
-            <Link to="/cliente/login" className="block w-full h-11 leading-[2.75rem] rounded-xl border border-border text-sm font-medium">
-              Sou cliente
-            </Link>
+          <div className="space-y-4 text-left">
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <PasteConfirmLink
+                onSuccess={() => {
+                  setStatus("ok");
+                  setMessage("E-mail confirmado com sucesso.");
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Link to="/staff/login" className="block w-full h-11 leading-[2.75rem] text-center rounded-xl bg-foreground text-background text-sm font-medium">
+                Ir para o login
+              </Link>
+              <Link to="/cliente/login" className="block w-full h-11 leading-[2.75rem] text-center rounded-xl border border-border text-sm font-medium">
+                Sou cliente
+              </Link>
+            </div>
           </div>
         )}
       </div>

@@ -5,6 +5,7 @@ import { useAuth, routeForRole } from "@/lib/auth";
 import { ArrowRight, Loader2, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { AuthShell, inputClass } from "@/components/auth-shell";
+import { PasteConfirmLink } from "@/components/paste-confirm-link";
 
 export const Route = createFileRoute("/staff/login")({
   head: () => ({ meta: [{ title: "Restaurante — SeatFlow" }] }),
@@ -100,6 +101,9 @@ function StaffLogin() {
           >
             Reenviar e-mail de confirmação
           </button>
+          <div className="mt-5 pt-5 border-t border-border">
+            <PasteConfirmLink onSuccess={() => navigate({ to: "/app", replace: true })} />
+          </div>
           <button onClick={() => { setSent(false); setMode("login"); }} className="mt-3 text-xs text-foreground underline">Voltar ao login</button>
         </div>
       ) : (

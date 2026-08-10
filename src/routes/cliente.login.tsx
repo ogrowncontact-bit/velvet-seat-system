@@ -5,6 +5,7 @@ import { useAuth, routeForRole } from "@/lib/auth";
 import { ArrowRight, Loader2, Utensils } from "lucide-react";
 import { toast } from "sonner";
 import { AuthShell, inputClass } from "@/components/auth-shell";
+import { PasteConfirmLink } from "@/components/paste-confirm-link";
 
 export const Route = createFileRoute("/cliente/login")({
   head: () => ({ meta: [{ title: "Clientes — SeatFlow" }] }),
@@ -20,6 +21,7 @@ function ClienteLogin() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     if (user && role) {
@@ -48,8 +50,10 @@ function ClienteLogin() {
           },
         });
         if (error) throw error;
-        if (!data.session) toast.success("Enviamos um link de confirmação para seu e-mail.");
-        else toast.success("Conta criada! Você já está logado.");
+        if (!data.session) {
+          setSent(true);
+          toast.success("Enviamos um link de confirmação para seu e-mail.");
+        } else toast.success("Conta criada! Você já está logado.");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
         if (error) throw error;
@@ -82,6 +86,32 @@ function ClienteLogin() {
         </>
       }
     >
+      {sent && (
+        <div className="rounded-2xl border border-border bg-card p-5 text-sm mb-6">
+          <p className="font-medium mb-1">Verifique seu e-mail</p>
+          <p className="text-muted-foreground">
+            Enviamos um link de confirmação para <strong>{email}</strong>. Se o botão do e-mail não funcionar, copie o endereço do link e cole abaixo.
+          </p>
+          <button
+            type="button"
+            onClick={async () => {
+              const { error } = await supabase.auth.resend({
+                type: "signup",
+                email,
+                options: { emailRedirectTo: `${window.location.origin}/confirm?type=signup` },
+              });
+              if (error) toast.error(error.message);
+              else toast.success("Novo e-mail de confirmação enviado.");
+            }}
+            className="mt-4 h-10 w-full rounded-xl border border-border text-sm font-medium hover:bg-muted"
+          >
+            Reenviar e-mail de confirmação
+          </button>
+          <div className="mt-5 pt-5 border-t border-border">
+            <PasteConfirmLink onSuccess={() => navigate({ to: "/cliente", replace: true })} />
+          </div>
+        </div>
+      )}
       <form onSubmit={submit} className="space-y-4">
         {mode === "signup" && (
           <>
