@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Trash2, ExternalLink } from "lucide-react";
+import { PhotoUpload } from "@/components/photo-upload";
 
 export const Route = createFileRoute("/app/public-profile")({ component: PublicProfilePage });
 
