@@ -803,6 +803,99 @@ export type Database = {
           },
         ]
       }
+      restaurant_closures: {
+        Row: {
+          closed_on: string
+          created_at: string
+          id: string
+          reason: string | null
+          restaurant_id: string
+        }
+        Insert: {
+          closed_on: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          restaurant_id: string
+        }
+        Update: {
+          closed_on?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_closures_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_closures_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_hours: {
+        Row: {
+          active: boolean
+          closes_at: string
+          created_at: string
+          id: string
+          last_seating_offset_minutes: number
+          opens_at: string
+          restaurant_id: string
+          shift_name: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          closes_at: string
+          created_at?: string
+          id?: string
+          last_seating_offset_minutes?: number
+          opens_at: string
+          restaurant_id: string
+          shift_name?: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          closes_at?: string
+          created_at?: string
+          id?: string
+          last_seating_offset_minutes?: number
+          opens_at?: string
+          restaurant_id?: string
+          shift_name?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_hours_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_hours_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_members: {
         Row: {
           created_at: string
@@ -852,6 +945,7 @@ export type Database = {
           cuisine: string | null
           currency: string
           default_deposit: number
+          default_duration_minutes: number
           description: string | null
           email: string | null
           hours: Json | null
@@ -865,6 +959,7 @@ export type Database = {
           phone: string | null
           photos: Json
           price_range: string | null
+          slot_interval_minutes: number
           slug: string | null
           timezone: string
           updated_at: string
@@ -882,6 +977,7 @@ export type Database = {
           cuisine?: string | null
           currency?: string
           default_deposit?: number
+          default_duration_minutes?: number
           description?: string | null
           email?: string | null
           hours?: Json | null
@@ -895,6 +991,7 @@ export type Database = {
           phone?: string | null
           photos?: Json
           price_range?: string | null
+          slot_interval_minutes?: number
           slug?: string | null
           timezone?: string
           updated_at?: string
@@ -912,6 +1009,7 @@ export type Database = {
           cuisine?: string | null
           currency?: string
           default_deposit?: number
+          default_duration_minutes?: number
           description?: string | null
           email?: string | null
           hours?: Json | null
@@ -925,6 +1023,7 @@ export type Database = {
           phone?: string | null
           photos?: Json
           price_range?: string | null
+          slot_interval_minutes?: number
           slug?: string | null
           timezone?: string
           updated_at?: string
@@ -1031,6 +1130,7 @@ export type Database = {
           dwell_minutes: number
           id: string
           label: string
+          min_seats: number
           pos_x: number
           pos_y: number
           restaurant_id: string
@@ -1044,6 +1144,7 @@ export type Database = {
           dwell_minutes?: number
           id?: string
           label: string
+          min_seats?: number
           pos_x?: number
           pos_y?: number
           restaurant_id: string
@@ -1057,6 +1158,7 @@ export type Database = {
           dwell_minutes?: number
           id?: string
           label?: string
+          min_seats?: number
           pos_x?: number
           pos_y?: number
           restaurant_id?: string
@@ -1220,6 +1322,23 @@ export type Database = {
       }
     }
     Functions: {
+      available_slots: {
+        Args: { _date: string; _party_size: number; _restaurant_id: string }
+        Returns: {
+          local_time: string
+          slot: string
+          tables_free: number
+        }[]
+      }
+      available_tables: {
+        Args: { _at: string; _party_size: number; _restaurant_id: string }
+        Returns: {
+          id: string
+          label: string
+          room_id: string
+          seats: number
+        }[]
+      }
       customer_reliability_score: {
         Args: { _customer_id: string }
         Returns: number
@@ -1246,6 +1365,10 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_within_service_hours: {
+        Args: { _at: string; _restaurant_id: string }
+        Returns: boolean
+      }
       promote_next_waitlist: {
         Args: { _restaurant_id: string }
         Returns: {
