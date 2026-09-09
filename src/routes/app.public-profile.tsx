@@ -120,19 +120,32 @@ function PublicProfilePage() {
 
       <section className="rounded-3xl border border-border bg-card p-6 space-y-4">
         <h2 className="font-medium">Imagens</h2>
-        <Field label="Imagem de capa (URL)">
-          <input className="input" value={form.cover_image_url || ""} onChange={(e) => set("cover_image_url", e.target.value)} placeholder="https://…" />
+        <Field label="Imagem de capa">
+          <div className="flex gap-2">
+            <input className="input" value={form.cover_image_url || ""} onChange={(e) => set("cover_image_url", e.target.value)} placeholder="Envie um arquivo ou cole uma URL" />
+            <PhotoUpload restaurantId={restaurantId!} label="Enviar" onUploaded={(urls) => set("cover_image_url", urls[0])} />
+          </div>
         </Field>
-        {form.cover_image_url && <img src={form.cover_image_url} alt="" className="rounded-xl w-full max-h-64 object-cover" />}
+        {form.cover_image_url && <img src={form.cover_image_url} alt="Capa do restaurante" className="rounded-xl w-full max-h-64 object-cover" />}
 
-        <Field label="Galeria de fotos (uma URL por linha)">
-          <textarea rows={5} className="input" style={{height:"auto",padding:"12px 14px"}} value={photosText} onChange={(e) => setPhotosText(e.target.value)} placeholder="https://…" />
+        <Field label="Galeria de fotos">
+          <div className="flex gap-2">
+            <PhotoUpload
+              restaurantId={restaurantId!}
+              multiple
+              label="Enviar fotos"
+              onUploaded={(urls) =>
+                setPhotosText((t) => [...t.split("\n").map((s) => s.trim()).filter(Boolean), ...urls].join("\n"))
+              }
+            />
+          </div>
+          <textarea rows={4} className="input mt-2" style={{height:"auto",padding:"12px 14px"}} value={photosText} onChange={(e) => setPhotosText(e.target.value)} placeholder="Ou cole uma URL por linha" />
         </Field>
         {photosList.length > 0 && (
           <div className="grid grid-cols-3 gap-2">
             {photosList.map((p, i) => (
               <div key={i} className="aspect-square overflow-hidden rounded-lg bg-muted relative group">
-                <img src={p} alt="" className="w-full h-full object-cover" />
+                <img src={p} alt={`Foto ${i + 1} do restaurante`} className="w-full h-full object-cover" />
                 <button
                   onClick={() => setPhotosText(photosList.filter((_, j) => j !== i).join("\n"))}
                   className="absolute top-1 right-1 size-7 rounded-md bg-background/90 grid place-items-center opacity-0 group-hover:opacity-100"
@@ -144,6 +157,7 @@ function PublicProfilePage() {
           </div>
         )}
       </section>
+
 
       <section className="rounded-3xl border border-border bg-card p-6 space-y-4">
         <h2 className="font-medium">Contato &amp; endereço</h2>
