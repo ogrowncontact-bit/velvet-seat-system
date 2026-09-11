@@ -961,6 +961,7 @@ export type Database = {
           price_range: string | null
           slot_interval_minutes: number
           slug: string | null
+          status: Database["public"]["Enums"]["restaurant_status"]
           timezone: string
           updated_at: string
           website: string | null
@@ -993,6 +994,7 @@ export type Database = {
           price_range?: string | null
           slot_interval_minutes?: number
           slug?: string | null
+          status?: Database["public"]["Enums"]["restaurant_status"]
           timezone?: string
           updated_at?: string
           website?: string | null
@@ -1025,6 +1027,7 @@ export type Database = {
           price_range?: string | null
           slot_interval_minutes?: number
           slug?: string | null
+          status?: Database["public"]["Enums"]["restaurant_status"]
           timezone?: string
           updated_at?: string
           website?: string | null
@@ -1033,6 +1036,61 @@ export type Database = {
           whatsapp_phone?: string | null
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          reservation_id: string | null
+          restaurant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          reservation_id?: string | null
+          restaurant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          reservation_id?: string | null
+          restaurant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: true
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rooms: {
         Row: {
@@ -1269,6 +1327,7 @@ export type Database = {
       restaurants_public: {
         Row: {
           address: string | null
+          avg_rating: number | null
           city: string | null
           cover_image_url: string | null
           cuisine: string | null
@@ -1280,43 +1339,10 @@ export type Database = {
           phone: string | null
           photos: Json | null
           price_range: string | null
+          review_count: number | null
           slug: string | null
           website: string | null
           whatsapp_phone: string | null
-        }
-        Insert: {
-          address?: string | null
-          city?: string | null
-          cover_image_url?: string | null
-          cuisine?: string | null
-          description?: string | null
-          email?: string | null
-          hours?: Json | null
-          id?: string | null
-          name?: string | null
-          phone?: string | null
-          photos?: Json | null
-          price_range?: string | null
-          slug?: string | null
-          website?: string | null
-          whatsapp_phone?: string | null
-        }
-        Update: {
-          address?: string | null
-          city?: string | null
-          cover_image_url?: string | null
-          cuisine?: string | null
-          description?: string | null
-          email?: string | null
-          hours?: Json | null
-          id?: string | null
-          name?: string | null
-          phone?: string | null
-          photos?: Json | null
-          price_range?: string | null
-          slug?: string | null
-          website?: string | null
-          whatsapp_phone?: string | null
         }
         Relationships: []
       }
@@ -1434,6 +1460,7 @@ export type Database = {
         | "completed"
         | "no_show"
         | "cancelled"
+      restaurant_status: "pending" | "approved" | "rejected"
       table_shape: "round" | "square" | "rect"
       table_status:
         | "available"
@@ -1598,6 +1625,7 @@ export const Constants = {
         "no_show",
         "cancelled",
       ],
+      restaurant_status: ["pending", "approved", "rejected"],
       table_shape: ["round", "square", "rect"],
       table_status: [
         "available",
