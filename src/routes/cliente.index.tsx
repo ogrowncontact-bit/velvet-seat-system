@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { CalendarPlus, MapPin, Users, Clock, X, Loader2 } from "lucide-react";
+import { CalendarPlus, MapPin, Users, Clock, X, Loader2, Star } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,6 +12,8 @@ export const Route = createFileRoute("/cliente/")({
   head: () => ({ meta: [{ title: "Minhas reservas — SeatFlow" }] }),
   component: ClienteHome,
 });
+
+type ReviewRow = { id: string; reservation_id: string; rating: number; comment: string | null };
 
 type Reservation = {
   id: string;
@@ -39,6 +42,24 @@ function ClienteHome() {
       return (data ?? []) as unknown as Reservation[];
     },
   });
+
+  // Fetched separately (rather than embedded in the query above) so that an older
+  // deployment without the reviews table/migration yet applied degrades to "no
+  // reviews shown" instead of a 400 breaking the entire reservation list.
+  const completedIds = (data ?? []).filter((r) => r.status === "completed").map((r) => r.id);
+  const { data: reviewRows } = useQuery({
+    queryKey: ["cliente-reviews", completedIds],
+    enabled: completedIds.length > 0,
+    queryFn: async () => {
+      const { data: rows, error } = await (supabase as any)
+        .from("reviews")
+        .select("id, reservation_id, rating, comment")
+        .in("reservation_id", completedIds);
+      if (error) throw error;
+      return (rows ?? []) as ReviewRow[];
+    },
+  });
+  const reviewsByReservation = new Map((reviewRows ?? []).map((rv) => [rv.reservation_id, rv]));
 
   const cancel = useMutation({
     mutationFn: async (id: string) => {
@@ -80,14 +101,28 @@ function ClienteHome() {
       ) : (
         <>
           <Section title="Próximas" empty="Nenhuma reserva futura." items={upcoming} onCancel={(id) => cancel.mutate(id)} />
-          <Section title="Histórico" empty="Sem histórico ainda." items={past} />
+          <Section title="Histórico" empty="Sem histórico ainda." items={past} allowReview reviewsByReservation={reviewsByReservation} />
         </>
       )}
     </div>
   );
 }
 
-function Section({ title, items, empty, onCancel }: { title: string; items: Reservation[]; empty: string; onCancel?: (id: string) => void }) {
+function Section({
+  title,
+  items,
+  empty,
+  onCancel,
+  allowReview,
+  reviewsByReservation,
+}: {
+  title: string;
+  items: Reservation[];
+  empty: string;
+  onCancel?: (id: string) => void;
+  allowReview?: boolean;
+  reviewsByReservation?: Map<string, ReviewRow>;
+}) {
   return (
     <section>
       <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">{title}</h2>
@@ -110,6 +145,9 @@ function Section({ title, items, empty, onCancel }: { title: string; items: Rese
                   )}
                 </div>
                 {r.notes && <p className="text-xs text-muted-foreground mt-2">"{r.notes}"</p>}
+                {allowReview && r.status === "completed" && r.restaurant && (
+                  <ReviewControl reservationId={r.id} restaurantId={r.restaurant.id} existing={reviewsByReservation?.get(r.id) ?? null} />
+                )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {r.restaurant?.slug && (
@@ -135,6 +173,98 @@ function Section({ title, items, empty, onCancel }: { title: string; items: Rese
         </ul>
       )}
     </section>
+  );
+}
+
+function ReviewControl({ reservationId, restaurantId, existing }: { reservationId: string; restaurantId: string; existing: ReviewRow | null }) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(existing?.rating ?? 5);
+  const [comment, setComment] = useState(existing?.comment ?? "");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    if (!user) return;
+    setBusy(true);
+    try {
+      const reviewsTbl = (supabase as any).from("reviews");
+      const { error } = existing
+        ? await reviewsTbl.update({ rating, comment: comment.trim() || null }).eq("id", existing.id)
+        : await reviewsTbl.insert({
+            reservation_id: reservationId,
+            restaurant_id: restaurantId,
+            user_id: user.id,
+            rating,
+            comment: comment.trim() || null,
+          });
+      if (error) throw error;
+      toast.success("Avaliação enviada — obrigado!");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["cliente-reviews"] });
+    } catch (err: any) {
+      toast.error(err?.message ?? "Não foi possível enviar sua avaliação");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!open && existing) {
+    return (
+      <div className="mt-3 flex items-center gap-2">
+        <div className="inline-flex items-center gap-0.5">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Star key={n} className={`size-3.5 ${n <= existing.rating ? "fill-accent text-accent" : "text-border"}`} />
+          ))}
+        </div>
+        {existing.comment && <p className="text-xs text-muted-foreground italic truncate">"{existing.comment}"</p>}
+        <button onClick={() => setOpen(true)} className="text-xs text-muted-foreground underline hover:text-foreground shrink-0">
+          Editar
+        </button>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline"
+      >
+        <Star className="size-3.5" /> Deixar avaliação verificada
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+      <div className="inline-flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" onClick={() => setRating(n)}>
+            <Star className={`size-5 ${n <= rating ? "fill-accent text-accent" : "text-border"}`} />
+          </button>
+        ))}
+      </div>
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Como foi a experiência? (opcional)"
+        rows={2}
+        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={submit}
+          disabled={busy}
+          className="h-8 px-3 rounded-lg bg-foreground text-background text-xs font-medium inline-flex items-center gap-1.5 disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="size-3.5 animate-spin" /> : "Enviar"}
+        </button>
+        <button onClick={() => setOpen(false)} className="h-8 px-3 rounded-lg border border-border text-xs font-medium">
+          Cancelar
+        </button>
+      </div>
+    </div>
   );
 }
 

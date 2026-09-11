@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Phone, Globe, Mail, MessageCircle, Calendar } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Globe, Mail, MessageCircle, Calendar, Star, ShieldCheck } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/r/$slug")({
   component: RestaurantDetail,
@@ -20,6 +22,20 @@ function RestaurantDetail() {
       }
       if (q.error) throw q.error;
       return q.data as any;
+    },
+  });
+
+  const { data: reviews } = useQuery({
+    queryKey: ["public-restaurant-reviews", data?.id],
+    enabled: !!data?.id,
+    queryFn: async () => {
+      const { data: rows, error } = await (supabase as any).from("reviews")
+        .select("id, rating, comment, created_at")
+        .eq("restaurant_id", data!.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return rows ?? [];
     },
   });
 
@@ -67,6 +83,12 @@ function RestaurantDetail() {
             )}
             <h1 className="font-serif text-4xl md:text-5xl italic">{data.name}</h1>
             <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
+              {Number(data.review_count) > 0 && (
+                <span className="inline-flex items-center gap-1 text-foreground font-medium">
+                  <Star className="size-4 fill-accent text-accent" /> {Number(data.avg_rating).toFixed(1)}
+                  <span className="text-muted-foreground font-normal">({data.review_count})</span>
+                </span>
+              )}
               {data.price_range && <span className="tnum">{data.price_range}</span>}
               {data.city && (
                 <span className="inline-flex items-center gap-1">
@@ -96,6 +118,34 @@ function RestaurantDetail() {
             </section>
           )}
 
+          {reviews && reviews.length > 0 && (
+            <section>
+              <h2 className="font-medium text-sm uppercase tracking-widest text-muted-foreground mb-3">
+                Avaliações ({reviews.length})
+              </h2>
+              <div className="space-y-4">
+                {reviews.map((rv: any) => (
+                  <div key={rv.id} className="rounded-xl border border-border p-4">
+                    <div className="flex items-center justify-between gap-3 mb-1.5">
+                      <div className="inline-flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star key={n} className={`size-3.5 ${n <= rv.rating ? "fill-accent text-accent" : "text-border"}`} />
+                        ))}
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                        <ShieldCheck className="size-3" /> Reserva verificada
+                      </span>
+                    </div>
+                    {rv.comment && <p className="text-sm leading-relaxed">{rv.comment}</p>}
+                    <p className="text-[10px] text-muted-foreground mt-1.5">
+                      {format(new Date(rv.created_at), "dd MMM yyyy", { locale: ptBR })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {data.hours && (
             <section>
               <h2 className="font-medium text-sm uppercase tracking-widest text-muted-foreground mb-3">Horários</h2>
@@ -110,6 +160,7 @@ function RestaurantDetail() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <Link
               to="/book"
+              search={{ restaurant: data.slug || data.id }}
               className="w-full h-12 rounded-xl bg-foreground text-background text-sm font-medium inline-flex items-center justify-center gap-2 hover:opacity-90"
             >
               <Calendar className="size-4" /> Reservar mesa

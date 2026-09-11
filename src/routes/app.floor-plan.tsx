@@ -29,6 +29,7 @@ type TableRow = {
   room_id: string;
   label: string;
   seats: number;
+  min_seats: number;
   shape: TableShape;
   status: TableStatus;
   pos_x: number;
@@ -457,6 +458,7 @@ function AddTableDialog({
 }) {
   const [label, setLabel] = useState(`T-${String(existingCount + 1).padStart(2, "0")}`);
   const [seats, setSeats] = useState(2);
+  const [minSeats, setMinSeats] = useState(1);
   const [shape, setShape] = useState<TableShape>("square");
   const [saving, setSaving] = useState(false);
 
@@ -467,10 +469,11 @@ function AddTableDialog({
       room_id: roomId,
       label,
       seats,
+      min_seats: Math.min(minSeats, seats),
       shape,
       pos_x: 60 + ((existingCount * 40) % (CANVAS_W - 200)),
       pos_y: 60 + ((existingCount * 30) % (CANVAS_H - 200)),
-    });
+    } as any);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Mesa adicionada");
@@ -493,14 +496,29 @@ function AddTableDialog({
             <ShapePicker value={shape} onChange={setShape} />
           </div>
           <div className="space-y-2">
-            <Label>Capacidade: {seats} pessoas</Label>
+            <Label>Capacidade máxima: {seats} pessoas</Label>
             <Input
               type="range"
               min={1}
               max={20}
               value={seats}
-              onChange={(e) => setSeats(parseInt(e.target.value))}
+              onChange={(e) => {
+                const v = parseInt(e.target.value);
+                setSeats(v);
+                if (minSeats > v) setMinSeats(v);
+              }}
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Capacidade mínima: {minSeats} pessoa{minSeats === 1 ? "" : "s"}</Label>
+            <Input
+              type="range"
+              min={1}
+              max={seats}
+              value={minSeats}
+              onChange={(e) => setMinSeats(parseInt(e.target.value))}
+            />
+            <p className="text-xs text-muted-foreground">Evita sentar 2 pessoas numa mesa de 8, por exemplo.</p>
           </div>
         </div>
         <DialogFooter>
@@ -528,12 +546,14 @@ function EditTableDialog({
 }) {
   const [label, setLabel] = useState(table.label);
   const [seats, setSeats] = useState(table.seats);
+  const [minSeats, setMinSeats] = useState(table.min_seats ?? 1);
   const [shape, setShape] = useState<TableShape>(table.shape);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setLabel(table.label);
     setSeats(table.seats);
+    setMinSeats(table.min_seats ?? 1);
     setShape(table.shape);
   }, [table]);
 
@@ -541,7 +561,7 @@ function EditTableDialog({
     setSaving(true);
     const { error } = await supabase
       .from("tables")
-      .update({ label, seats, shape })
+      .update({ label, seats, min_seats: Math.min(minSeats, seats), shape } as any)
       .eq("id", table.id);
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -573,14 +593,29 @@ function EditTableDialog({
             <ShapePicker value={shape} onChange={setShape} />
           </div>
           <div className="space-y-2">
-            <Label>Capacidade: {seats} pessoas</Label>
+            <Label>Capacidade máxima: {seats} pessoas</Label>
             <Input
               type="range"
               min={1}
               max={20}
               value={seats}
-              onChange={(e) => setSeats(parseInt(e.target.value))}
+              onChange={(e) => {
+                const v = parseInt(e.target.value);
+                setSeats(v);
+                if (minSeats > v) setMinSeats(v);
+              }}
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Capacidade mínima: {minSeats} pessoa{minSeats === 1 ? "" : "s"}</Label>
+            <Input
+              type="range"
+              min={1}
+              max={seats}
+              value={minSeats}
+              onChange={(e) => setMinSeats(parseInt(e.target.value))}
+            />
+            <p className="text-xs text-muted-foreground">Evita sentar 2 pessoas numa mesa de 8, por exemplo.</p>
           </div>
         </div>
         <DialogFooter className="flex sm:justify-between gap-2">

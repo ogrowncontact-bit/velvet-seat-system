@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCurrentRestaurant } from "@/hooks/use-current-restaurant";
 import { fetchReservations, fetchTables, qk } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import type { ReservationStatus } from "@/lib/demo-data";
+import { friendlyReservationError } from "@/lib/reservation-errors";
 import { toast } from "sonner";
 import { Plus, X, Loader2 } from "lucide-react";
 
@@ -127,8 +128,31 @@ function NewReservationDrawer({ onClose, restaurantId, tables }: { onClose: () =
     return d.toISOString().slice(0, 16);
   });
   const [tableId, setTableId] = useState<string>("");
+  const [autoPick, setAutoPick] = useState(true);
+  const [suggested, setSuggested] = useState<{ id: string; label: string; seats: number }[] | null>(null);
+  const [loadingSuggested, setLoadingSuggested] = useState(false);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Ask the DB which tables are actually free for this date/party — this is the
+  // same available_tables() the public booking flow uses, so staff sees the
+  // identical picture. We pre-select the best fit automatically (smallest table
+  // that still fits), but staff can always override or pick "Sem mesa".
+  useEffect(() => {
+    if (!restaurantId || !when || !party) return;
+    let cancelled = false;
+    setLoadingSuggested(true);
+    supabase.rpc("available_tables", { _restaurant_id: restaurantId, _at: new Date(when).toISOString(), _party_size: party })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setLoadingSuggested(false);
+        if (error) { toast.error(friendlyReservationError(error.message)); setSuggested([]); return; }
+        const rows = (data ?? []) as { id: string; label: string; seats: number }[];
+        setSuggested(rows);
+        if (autoPick) setTableId(rows[0]?.id ?? "");
+      });
+    return () => { cancelled = true; };
+  }, [restaurantId, when, party]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,7 +169,7 @@ function NewReservationDrawer({ onClose, restaurantId, tables }: { onClose: () =
       source: "staff",
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyReservationError(error.message));
     toast.success("Reservation created");
     qc.invalidateQueries({ queryKey: qk.reservations(restaurantId) });
     onClose();
@@ -166,11 +190,28 @@ function NewReservationDrawer({ onClose, restaurantId, tables }: { onClose: () =
             <Field label="Party"><input type="number" min={1} max={50} required value={party} onChange={(e) => setParty(parseInt(e.target.value))} className="input tnum" /></Field>
             <Field label="Date & time"><input type="datetime-local" required value={when} onChange={(e) => setWhen(e.target.value)} className="input" /></Field>
           </div>
-          <Field label="Table">
-            <select value={tableId} onChange={(e) => setTableId(e.target.value)} className="input">
-              <option value="">Auto-assign later</option>
-              {tables.map((t) => <option key={t.id} value={t.id}>{t.label} · {t.seats} seats</option>)}
+          <Field label={`Table ${loadingSuggested ? "(checking availability…)" : ""}`}>
+            <select
+              value={tableId}
+              onChange={(e) => { setAutoPick(false); setTableId(e.target.value); }}
+              className="input"
+            >
+              <option value="">Sem mesa (atribuir depois)</option>
+              {tables.map((t) => {
+                const free = suggested?.some((s) => s.id === t.id) ?? true;
+                return (
+                  <option key={t.id} value={t.id} disabled={suggested !== null && !free}>
+                    {t.label} · {t.seats} seats{suggested !== null && !free ? " — indisponível" : ""}
+                  </option>
+                );
+              })}
             </select>
+            {suggested && suggested.length > 0 && autoPick && tableId && (
+              <p className="mt-1.5 text-xs text-muted-foreground">Mesa sugerida automaticamente pela melhor capacidade disponível.</p>
+            )}
+            {suggested && suggested.length === 0 && (
+              <p className="mt-1.5 text-xs text-warning-foreground">Nenhuma mesa livre para {party} pessoas nesse horário.</p>
+            )}
           </Field>
           <Field label="Notes"><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} className="input" placeholder="Allergies, occasion, preferences…" /></Field>
           <button type="submit" disabled={loading} className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-medium inline-flex items-center justify-center gap-2 disabled:opacity-50">

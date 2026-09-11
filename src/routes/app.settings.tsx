@@ -1,11 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useCurrentRestaurant } from "@/hooks/use-current-restaurant";
 import { supabase } from "@/integrations/supabase/client";
-import { qk } from "@/lib/queries";
+import { qk, fetchHours, fetchClosures, fetchTables } from "@/lib/queries";
+import { friendlyReservationError } from "@/lib/reservation-errors";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, LayoutGrid, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/app/settings")({ component: SettingsPage });
 
@@ -16,6 +17,8 @@ function SettingsPage() {
   const [timezone, setTz] = useState("UTC");
   const [currency, setCurrency] = useState("USD");
   const [defaultDeposit, setDeposit] = useState("0");
+  const [defaultDuration, setDefaultDuration] = useState("90");
+  const [slotInterval, setSlotInterval] = useState("30");
   const [saving, setSaving] = useState(false);
 
   const [policy, setPolicy] = useState<"none" | "card" | "deposit" | "fine">("none");
@@ -30,12 +33,20 @@ function SettingsPage() {
       setTz(restaurant.timezone);
       setCurrency(restaurant.currency);
       setDeposit(String(restaurant.default_deposit ?? 0));
+      setDefaultDuration(String((restaurant as any).default_duration_minutes ?? 90));
+      setSlotInterval(String((restaurant as any).slot_interval_minutes ?? 30));
       setPolicy((restaurant as any).no_show_policy ?? "none");
       setNoShowDeposit(String((restaurant as any).no_show_deposit ?? 0));
       setNoShowFine(String((restaurant as any).no_show_fine ?? 0));
       setOfferTimeout(String((restaurant as any).offer_timeout_minutes ?? 10));
     }
   }, [restaurant]);
+
+  const tables = useQuery({
+    queryKey: qk.tables(restaurantId ?? ""),
+    queryFn: () => fetchTables(restaurantId!),
+    enabled: !!restaurantId,
+  });
 
   const members = useQuery({
     queryKey: qk.members(restaurantId ?? ""),
@@ -55,7 +66,9 @@ function SettingsPage() {
     setSaving(true);
     const { error } = await supabase.from("restaurants").update({
       name, timezone, currency, default_deposit: parseFloat(defaultDeposit) || 0,
-    }).eq("id", restaurantId);
+      default_duration_minutes: Math.max(15, parseInt(defaultDuration) || 90),
+      slot_interval_minutes: Math.max(5, parseInt(slotInterval) || 30),
+    } as any).eq("id", restaurantId);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Venue updated");
@@ -93,11 +106,40 @@ function SettingsPage() {
             <Field label="Currency"><input value={currency} onChange={(e) => setCurrency(e.target.value)} className="input" /></Field>
           </div>
           <Field label="Default deposit per guest"><input type="number" min={0} value={defaultDeposit} onChange={(e) => setDeposit(e.target.value)} className="input tnum" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Duração média da reserva (min)"><input type="number" min={15} step={5} value={defaultDuration} onChange={(e) => setDefaultDuration(e.target.value)} className="input tnum" /></Field>
+            <Field label="Intervalo entre horários (min)"><input type="number" min={5} step={5} value={slotInterval} onChange={(e) => setSlotInterval(e.target.value)} className="input tnum" /></Field>
+          </div>
           <button onClick={saveVenue} disabled={saving} className="h-10 px-5 rounded-lg bg-foreground text-background text-sm font-medium inline-flex items-center gap-2 disabled:opacity-50">
             {saving && <Loader2 className="size-4 animate-spin" />} Save changes
           </button>
         </div>
       </section>
+
+      <section className="rounded-3xl border border-border bg-card overflow-hidden">
+        <div className="p-6 border-b border-border">
+          <h2 className="font-medium">Tables</h2>
+          <p className="text-xs text-muted-foreground mt-1">Add, remove and reposition tables on the floor plan.</p>
+        </div>
+        <div className="p-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="size-11 rounded-xl bg-muted grid place-items-center">
+              <LayoutGrid className="size-5 text-muted-foreground" />
+            </div>
+            <div>
+              <div className="font-serif text-2xl italic tnum">{tables.data?.length ?? "—"}</div>
+              <div className="text-xs text-muted-foreground">
+                {tables.data ? `${tables.data.length} table${tables.data.length === 1 ? "" : "s"} · ${tables.data.reduce((s, t: any) => s + (t.seats ?? 0), 0)} seats total` : "Loading…"}
+              </div>
+            </div>
+          </div>
+          <Link to="/app/floor-plan" className="h-10 px-4 rounded-lg border border-border bg-card hover:bg-muted text-sm font-medium inline-flex items-center gap-1.5 shrink-0">
+            Manage tables <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      </section>
+
+      {restaurantId && <HoursSection restaurantId={restaurantId} />}
 
       <section className="rounded-3xl border border-border bg-card overflow-hidden">
         <div className="p-6 border-b border-border flex items-center justify-between">
@@ -322,6 +364,264 @@ function WhatsAppSection({ restaurantId, restaurant }: { restaurantId: string; r
           ))}
           {log.data?.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma mensagem ainda.</div>}
         </div>
+      </div>
+    </section>
+  );
+}
+
+type HourRow = {
+  id: string;
+  restaurant_id: string;
+  weekday: number;
+  shift_name: string;
+  opens_at: string;
+  closes_at: string;
+  last_seating_offset_minutes: number;
+  active: boolean;
+};
+
+type ClosureRow = { id: string; restaurant_id: string; closed_on: string; reason: string | null };
+
+const WEEKDAYS = [
+  { v: 0, label: "Domingo" },
+  { v: 1, label: "Segunda" },
+  { v: 2, label: "Terça" },
+  { v: 3, label: "Quarta" },
+  { v: 4, label: "Quinta" },
+  { v: 5, label: "Sexta" },
+  { v: 6, label: "Sábado" },
+] as const;
+
+function hhmm(t: string) {
+  return (t || "").slice(0, 5);
+}
+
+function HoursSection({ restaurantId }: { restaurantId: string }) {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: qk.hours(restaurantId) });
+  const invalidateClosures = () => qc.invalidateQueries({ queryKey: qk.closures(restaurantId) });
+
+  const hours = useQuery({ queryKey: qk.hours(restaurantId), queryFn: () => fetchHours(restaurantId) as Promise<HourRow[]> });
+  const closures = useQuery({ queryKey: qk.closures(restaurantId), queryFn: () => fetchClosures(restaurantId) as Promise<ClosureRow[]> });
+
+  const byDay: Record<number, HourRow[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+  for (const h of hours.data ?? []) byDay[h.weekday]?.push(h);
+
+  const openDay = async (weekday: number) => {
+    const existing = byDay[weekday] ?? [];
+    if (existing.length === 0) {
+      const { error } = await supabase.from("restaurant_hours").insert({
+        restaurant_id: restaurantId, weekday, shift_name: "Serviço", opens_at: "12:00", closes_at: "22:00",
+        last_seating_offset_minutes: 60, active: true,
+      } as any);
+      if (error) return toast.error(friendlyReservationError(error.message));
+    } else {
+      const { error } = await supabase.from("restaurant_hours").update({ active: true } as any)
+        .eq("restaurant_id", restaurantId).eq("weekday", weekday);
+      if (error) return toast.error(friendlyReservationError(error.message));
+    }
+    invalidate();
+  };
+
+  const closeDay = async (weekday: number) => {
+    const { error } = await supabase.from("restaurant_hours").update({ active: false } as any)
+      .eq("restaurant_id", restaurantId).eq("weekday", weekday);
+    if (error) return toast.error(friendlyReservationError(error.message));
+    invalidate();
+  };
+
+  const addShift = async (weekday: number) => {
+    const { error } = await supabase.from("restaurant_hours").insert({
+      restaurant_id: restaurantId, weekday, shift_name: "Turno", opens_at: "12:00", closes_at: "15:00",
+      last_seating_offset_minutes: 60, active: true,
+    } as any);
+    if (error) return toast.error(friendlyReservationError(error.message));
+    invalidate();
+  };
+
+  const updateShift = async (id: string, patch: Partial<HourRow>) => {
+    const { error } = await supabase.from("restaurant_hours").update(patch as any).eq("id", id);
+    if (error) return toast.error(friendlyReservationError(error.message));
+    invalidate();
+  };
+
+  const removeShift = async (id: string) => {
+    const { error } = await supabase.from("restaurant_hours").delete().eq("id", id);
+    if (error) return toast.error(friendlyReservationError(error.message));
+    invalidate();
+  };
+
+  const copyToAllDays = async (weekday: number) => {
+    const source = byDay[weekday] ?? [];
+    if (source.length === 0) return toast.error("Configure pelo menos um turno neste dia antes de copiar.");
+    const others = WEEKDAYS.map((d) => d.v).filter((v) => v !== weekday);
+    const { error: delError } = await supabase.from("restaurant_hours").delete()
+      .eq("restaurant_id", restaurantId).in("weekday", others);
+    if (delError) return toast.error(friendlyReservationError(delError.message));
+    const rows = others.flatMap((wd) => source.map((s) => ({
+      restaurant_id: restaurantId, weekday: wd, shift_name: s.shift_name,
+      opens_at: s.opens_at, closes_at: s.closes_at,
+      last_seating_offset_minutes: s.last_seating_offset_minutes, active: true,
+    })));
+    const { error: insError } = await supabase.from("restaurant_hours").insert(rows as any);
+    if (insError) return toast.error(friendlyReservationError(insError.message));
+    toast.success("Horários copiados para todos os dias");
+    invalidate();
+  };
+
+  const [closureDate, setClosureDate] = useState("");
+  const [closureReason, setClosureReason] = useState("");
+  const [addingClosure, setAddingClosure] = useState(false);
+
+  const addClosure = async () => {
+    if (!closureDate) return;
+    setAddingClosure(true);
+    const { error } = await supabase.from("restaurant_closures").insert({
+      restaurant_id: restaurantId, closed_on: closureDate, reason: closureReason || null,
+    } as any);
+    setAddingClosure(false);
+    if (error) return toast.error(friendlyReservationError(error.message));
+    setClosureDate("");
+    setClosureReason("");
+    invalidateClosures();
+  };
+
+  const removeClosure = async (id: string) => {
+    const { error } = await supabase.from("restaurant_closures").delete().eq("id", id);
+    if (error) return toast.error(friendlyReservationError(error.message));
+    invalidateClosures();
+  };
+
+  return (
+    <section className="rounded-3xl border border-border bg-card overflow-hidden">
+      <div className="p-6 border-b border-border">
+        <h2 className="font-medium">Horários</h2>
+        <p className="text-xs text-muted-foreground mt-1">
+          Só é possível reservar dentro dos turnos abertos aqui. Nenhum turno cadastrado = reservas aceitas em qualquer horário.
+        </p>
+      </div>
+
+      {hours.isLoading ? (
+        <div className="p-6"><Loader2 className="size-4 animate-spin" /></div>
+      ) : (
+        <div className="divide-y divide-border">
+          {WEEKDAYS.map((day) => {
+            const shifts = (byDay[day.v] ?? []).filter((s) => s.active);
+            const isOpen = shifts.length > 0;
+            return (
+              <div key={day.v} className="p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium w-24 shrink-0">{day.label}</span>
+                  <div className="flex items-center gap-2">
+                    {isOpen && (
+                      <button
+                        type="button"
+                        onClick={() => copyToAllDays(day.v)}
+                        title="Copiar para todos os dias"
+                        className="h-8 px-2.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-muted inline-flex items-center gap-1.5"
+                      >
+                        <Copy className="size-3.5" /> Copiar p/ todos
+                      </button>
+                    )}
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={isOpen}
+                        onChange={(e) => (e.target.checked ? openDay(day.v) : closeDay(day.v))}
+                      />
+                      <span className={`relative inline-block w-10 h-6 rounded-full transition ${isOpen ? "bg-foreground" : "bg-muted"}`}>
+                        <span className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-background transition ${isOpen ? "translate-x-4" : ""}`} />
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {isOpen ? (
+                  <div className="mt-3 space-y-2 pl-0 sm:pl-[6.5rem]">
+                    {shifts.map((s) => (
+                      <div key={s.id} className="flex flex-wrap items-center gap-2">
+                        <input
+                          defaultValue={s.shift_name}
+                          onBlur={(e) => e.target.value !== s.shift_name && updateShift(s.id, { shift_name: e.target.value })}
+                          className="h-9 w-28 px-2.5 rounded-lg border border-border bg-background text-xs"
+                          placeholder="Almoço, Jantar…"
+                        />
+                        <input
+                          type="time"
+                          defaultValue={hhmm(s.opens_at)}
+                          onBlur={(e) => e.target.value && updateShift(s.id, { opens_at: e.target.value })}
+                          className="h-9 px-2 rounded-lg border border-border bg-background text-xs tnum"
+                        />
+                        <span className="text-xs text-muted-foreground">até</span>
+                        <input
+                          type="time"
+                          defaultValue={hhmm(s.closes_at)}
+                          onBlur={(e) => e.target.value && updateShift(s.id, { closes_at: e.target.value })}
+                          className="h-9 px-2 rounded-lg border border-border bg-background text-xs tnum"
+                        />
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">última reserva</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={240}
+                          step={5}
+                          defaultValue={s.last_seating_offset_minutes}
+                          onBlur={(e) => updateShift(s.id, { last_seating_offset_minutes: parseInt(e.target.value) || 0 })}
+                          className="h-9 w-16 px-2 rounded-lg border border-border bg-background text-xs tnum"
+                        />
+                        <span className="text-xs text-muted-foreground">min antes de fechar</span>
+                        <button onClick={() => removeShift(s.id)} className="ml-auto text-muted-foreground hover:text-destructive">
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addShift(day.v)}
+                      className="text-xs font-medium text-accent hover:underline inline-flex items-center gap-1"
+                    >
+                      <Plus className="size-3.5" /> Adicionar turno
+                    </button>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground pl-0 sm:pl-[6.5rem]">Fechado</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="border-t border-border p-6 space-y-4">
+        <h3 className="text-sm font-medium">Fechamentos pontuais</h3>
+        <p className="text-xs text-muted-foreground -mt-2">Feriados, férias, eventos privados — datas específicas em que não aceita reservas.</p>
+        <div className="flex flex-wrap items-end gap-2">
+          <div>
+            <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Data</label>
+            <input type="date" value={closureDate} onChange={(e) => setClosureDate(e.target.value)} className="mt-1.5 h-9 px-2.5 rounded-lg border border-border bg-background text-xs" />
+          </div>
+          <div className="flex-1 min-w-[160px]">
+            <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Motivo (opcional)</label>
+            <input value={closureReason} onChange={(e) => setClosureReason(e.target.value)} placeholder="Feriado, férias…" className="mt-1.5 w-full h-9 px-2.5 rounded-lg border border-border bg-background text-xs" />
+          </div>
+          <button onClick={addClosure} disabled={!closureDate || addingClosure} className="h-9 px-3.5 rounded-lg bg-foreground text-background text-xs font-medium inline-flex items-center gap-1.5 disabled:opacity-50">
+            {addingClosure ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />} Adicionar
+          </button>
+        </div>
+        {(closures.data?.length ?? 0) > 0 && (
+          <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+            {closures.data!.map((c) => (
+              <div key={c.id} className="p-3 flex items-center justify-between text-xs">
+                <span className="tnum">
+                  {new Date(c.closed_on + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                  {c.reason && <span className="text-muted-foreground"> — {c.reason}</span>}
+                </span>
+                <button onClick={() => removeClosure(c.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="size-3.5" /></button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

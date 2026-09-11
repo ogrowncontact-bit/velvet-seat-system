@@ -8,10 +8,11 @@ import {
   adminCreateRestaurantWithOwner,
   adminAddMember,
   adminResetUserPassword,
+  adminSetRestaurantStatus,
 } from "@/lib/admin.functions";
 import { useIsPlatformAdmin, setSelectedRestaurant } from "@/hooks/use-current-restaurant";
 import { toast } from "sonner";
-import { Loader2, Plus, Shield, KeyRound, UserPlus, LogIn, Building2 } from "lucide-react";
+import { Loader2, Plus, Shield, KeyRound, UserPlus, LogIn, Building2, Check, X, Clock } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,8 @@ function AdminPage() {
     queryFn: () => listMembers(),
     enabled: !!isAdmin,
   });
+
+  const pending = restaurants?.filter((r: any) => r.status === "pending") ?? [];
 
   if (isLoading) {
     return (
@@ -85,45 +88,46 @@ function AdminPage() {
         }} />
       </header>
 
+      {pending.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-accent inline-flex items-center gap-1.5">
+            <Clock className="size-3.5" /> Pendentes de aprovação ({pending.length})
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pending.map((r: any) => (
+              <RestaurantCard
+                key={r.id}
+                r={r}
+                onEnter={() => {
+                  setSelectedRestaurant(r.id);
+                  toast.success(`Entrando como ${r.name}`);
+                  navigate({ to: "/app" });
+                }}
+                onMemberAdded={() => qc.invalidateQueries({ queryKey: ["admin", "members"] })}
+                onStatusChanged={() => qc.invalidateQueries({ queryKey: ["admin", "restaurants"] })}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Restaurantes ({restaurants?.length ?? 0})
         </h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {restaurants?.map((r) => (
-            <div key={r.id} className="rounded-2xl border border-border bg-card p-5 space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-lg bg-foreground text-background grid place-items-center text-xs font-semibold">
-                    {r.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="font-medium leading-tight">{r.name}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
-                      {r.currency} · {r.timezone}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setSelectedRestaurant(r.id);
-                    toast.success(`Entrando como ${r.name}`);
-                    navigate({ to: "/app" });
-                  }}
-                  className="flex-1 h-9 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium inline-flex items-center justify-center gap-1.5"
-                >
-                  <LogIn className="size-3.5" /> Entrar
-                </button>
-                <AddMemberDialog
-                  restaurantId={r.id}
-                  restaurantName={r.name}
-                  onAdded={() => qc.invalidateQueries({ queryKey: ["admin", "members"] })}
-                />
-              </div>
-            </div>
+          {restaurants?.map((r: any) => (
+            <RestaurantCard
+              key={r.id}
+              r={r}
+              onEnter={() => {
+                setSelectedRestaurant(r.id);
+                toast.success(`Entrando como ${r.name}`);
+                navigate({ to: "/app" });
+              }}
+              onMemberAdded={() => qc.invalidateQueries({ queryKey: ["admin", "members"] })}
+              onStatusChanged={() => qc.invalidateQueries({ queryKey: ["admin", "restaurants"] })}
+            />
           ))}
           {restaurants && restaurants.length === 0 && (
             <div className="md:col-span-2 lg:col-span-3 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
@@ -173,6 +177,105 @@ function AdminPage() {
           </table>
         </div>
       </section>
+    </div>
+  );
+}
+
+const STATUS_STYLES: Record<string, string> = {
+  pending: "bg-accent/15 text-accent",
+  approved: "bg-success/15 text-success",
+  rejected: "bg-destructive/15 text-destructive",
+};
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Pendente",
+  approved: "Aprovado",
+  rejected: "Rejeitado",
+};
+
+function RestaurantCard({
+  r,
+  onEnter,
+  onMemberAdded,
+  onStatusChanged,
+}: {
+  r: any;
+  onEnter: () => void;
+  onMemberAdded: () => void;
+  onStatusChanged: () => void;
+}) {
+  const setStatus = useServerFn(adminSetRestaurantStatus);
+  const [busy, setBusy] = useState(false);
+  const status = r.status ?? "approved";
+
+  const changeStatus = async (next: "approved" | "rejected") => {
+    setBusy(true);
+    try {
+      await setStatus({ data: { restaurantId: r.id, status: next } });
+      toast.success(next === "approved" ? `${r.name} aprovado.` : `${r.name} rejeitado.`);
+      onStatusChanged();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Erro ao atualizar status");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="size-10 rounded-lg bg-foreground text-background grid place-items-center text-xs font-semibold">
+            {r.name.slice(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <div className="font-medium leading-tight">{r.name}</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
+              {r.currency} · {r.timezone}
+            </div>
+          </div>
+        </div>
+        <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded font-semibold ${STATUS_STYLES[status] ?? ""}`}>
+          {STATUS_LABELS[status] ?? status}
+        </span>
+      </div>
+
+      {status === "pending" && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => changeStatus("approved")}
+            disabled={busy}
+            className="flex-1 h-9 rounded-lg bg-success text-success-foreground hover:opacity-90 text-xs font-medium inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} Aprovar
+          </button>
+          <button
+            onClick={() => changeStatus("rejected")}
+            disabled={busy}
+            className="flex-1 h-9 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
+          >
+            <X className="size-3.5" /> Rejeitar
+          </button>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button
+          onClick={onEnter}
+          className="flex-1 h-9 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium inline-flex items-center justify-center gap-1.5"
+        >
+          <LogIn className="size-3.5" /> Entrar
+        </button>
+        <AddMemberDialog restaurantId={r.id} restaurantName={r.name} onAdded={onMemberAdded} />
+        {status === "rejected" && (
+          <button
+            onClick={() => changeStatus("approved")}
+            disabled={busy}
+            className="h-9 px-3 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium disabled:opacity-50"
+          >
+            Reconsiderar
+          </button>
+        )}
+      </div>
     </div>
   );
 }

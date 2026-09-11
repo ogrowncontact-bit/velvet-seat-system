@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Utensils } from "lucide-react";
+import { ArrowLeft, MapPin, Utensils, Star } from "lucide-react";
 
 export const Route = createFileRoute("/restaurants")({
   head: () => ({
@@ -19,8 +19,12 @@ function RestaurantsList() {
   const { data, isLoading } = useQuery({
     queryKey: ["public-restaurants"],
     queryFn: async () => {
+      // "*" rather than an explicit column list: avg_rating/review_count only exist
+      // once the reviews migration has run, and a missing named column would 400 the
+      // whole query (breaking the entire public directory) if code ships before that
+      // migration is applied.
       const { data, error } = await (supabase.from("restaurants_public") as any)
-        .select("id, name, slug, description, cuisine, price_range, city, cover_image_url, photos")
+        .select("*")
         .order("name");
       if (error) throw error;
       return (data ?? []) as any[];
@@ -75,6 +79,11 @@ function RestaurantsList() {
                 <div className="p-5">
                   <h3 className="font-serif text-xl">{r.name}</h3>
                   <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                    {Number((r as any).review_count) > 0 && (
+                      <span className="inline-flex items-center gap-1 text-foreground font-medium">
+                        <Star className="size-3 fill-accent text-accent" /> {Number((r as any).avg_rating).toFixed(1)}
+                      </span>
+                    )}
                     {r.cuisine && <span>{r.cuisine}</span>}
                     {r.price_range && <span className="tnum">{r.price_range}</span>}
                     {r.city && (

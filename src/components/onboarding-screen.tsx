@@ -255,7 +255,9 @@ export function OnboardingScreen() {
                   <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} className="mt-0.5 size-4" />
                   <span className="text-sm">
                     Publicar na vitrine pública
-                    <span className="block text-xs text-muted-foreground">Aparece em /restaurants e permite reservas online.</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Aparece em /restaurants e permite reservas online depois que a equipe SeatFlow revisar e aprovar o cadastro.
+                    </span>
                   </span>
                 </label>
               </>

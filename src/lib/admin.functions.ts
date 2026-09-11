@@ -122,6 +122,27 @@ export const adminCreateRestaurantWithOwner = createServerFn({ method: "POST" })
     return { restaurantId: r.id, userId };
   });
 
+// Approve or reject a pending restaurant registration (admin only)
+export const adminSetRestaurantStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        restaurantId: z.string().uuid(),
+        status: z.enum(["pending", "approved", "rejected"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await assertPlatformAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("restaurants")
+      .update({ status: data.status } as any)
+      .eq("id", data.restaurantId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // Reset a user's password (admin)
 export const adminResetUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

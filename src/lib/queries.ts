@@ -13,6 +13,8 @@ export const qk = {
   waitlist: (rid: string) => ["waitlist", rid] as const,
   members: (rid: string) => ["members", rid] as const,
   activity: (rid: string) => ["activity", rid] as const,
+  hours: (rid: string) => ["restaurant-hours", rid] as const,
+  closures: (rid: string) => ["restaurant-closures", rid] as const,
 };
 
 export async function fetchProfile(userId: string) {
@@ -118,6 +120,27 @@ export async function fetchActivity(rid: string) {
     .eq("restaurant_id", rid)
     .order("created_at", { ascending: false })
     .limit(8);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchHours(rid: string) {
+  const { data, error } = await supabase
+    .from("restaurant_hours")
+    .select("*")
+    .eq("restaurant_id", rid)
+    .order("weekday", { ascending: true })
+    .order("opens_at", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchClosures(rid: string) {
+  const { data, error } = await supabase
+    .from("restaurant_closures")
+    .select("*")
+    .eq("restaurant_id", rid)
+    .order("closed_on", { ascending: true });
   if (error) throw error;
   return data ?? [];
 }

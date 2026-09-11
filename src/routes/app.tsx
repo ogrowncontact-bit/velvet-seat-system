@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tan
 import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, ChevronDown, Loader2, Menu, Search, LogOut, Building2, Shield } from "lucide-react";
+import { Bell, ChevronDown, Loader2, Menu, Search, LogOut, Building2, Shield, Clock, TriangleAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useCurrentRestaurant, useMyRestaurants, useIsPlatformAdmin, setSelectedRestaurant } from "@/hooks/use-current-restaurant";
 import { OnboardingScreen } from "@/components/onboarding-screen";
@@ -169,6 +169,28 @@ function AppLayout() {
           </div>
         </header>
         <main className="flex-1 p-5 md:p-10">
+          {restaurant && (restaurant as any).status === "pending" && (
+            <div className="mb-6 rounded-2xl border border-accent/30 bg-accent/10 px-5 py-4 flex items-start gap-3 text-sm">
+              <Clock className="size-4 text-accent shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Cadastro em análise</p>
+                <p className="text-muted-foreground mt-0.5">
+                  Sua equipe já pode configurar tudo por aqui, mas o {restaurant.name} só aparece na vitrine pública e recebe reservas online depois que a equipe SeatFlow aprovar o cadastro.
+                </p>
+              </div>
+            </div>
+          )}
+          {restaurant && (restaurant as any).status === "rejected" && (
+            <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 px-5 py-4 flex items-start gap-3 text-sm">
+              <TriangleAlert className="size-4 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Cadastro não aprovado</p>
+                <p className="text-muted-foreground mt-0.5">
+                  O cadastro do {restaurant.name} não foi aprovado e não aparece na vitrine pública. Fale com o suporte SeatFlow para entender os próximos passos.
+                </p>
+              </div>
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

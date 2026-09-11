@@ -1,20 +1,28 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Calendar, Users, Clock, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
 import { useAuth } from "@/lib/auth";
+import { friendlyReservationError } from "@/lib/reservation-errors";
+
+const bookSearchSchema = z.object({
+  restaurant: z.string().optional(),
+});
 
 export const Route = createFileRoute("/book")({
   head: () => ({ meta: [
     { title: "Reserve a table — SeatFlow" },
     { name: "description", content: "Reserve your table." },
   ]}),
+  validateSearch: bookSearchSchema,
   component: Book,
 });
 
 function Book() {
   const { user } = useAuth();
+  const { restaurant: restaurantParam } = useSearch({ from: "/book" });
   const [step, setStep] = useState(1);
   const [restaurants, setRestaurants] = useState<{ id: string; name: string }[]>([]);
   const [restaurantId, setRestaurantId] = useState<string>("");
@@ -27,14 +35,70 @@ function Book() {
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Whether this venue has configured any restaurant_hours at all. If not, we fall
+  // back to the fixed time list below instead of asking the (empty) availability
+  // RPC, which would otherwise report the venue as closed every day.
+  const [hasConfiguredHours, setHasConfiguredHours] = useState<boolean | null>(null);
+  const [slots, setSlots] = useState<{ slot: string; local_time: string; tables_free: number }[] | null>(null);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+
   useEffect(() => {
-    supabase.from("restaurants").select("id, name").limit(20).then(({ data }) => {
+    const tbl = supabase.from("restaurants_public") as any;
+    if (restaurantParam) {
+      // A specific venue was chosen upstream (e.g. from /r/$slug) — resolve it by
+      // slug first, falling back to id, so the booking flow stays connected to the
+      // restaurant the visitor was actually looking at instead of picking an
+      // arbitrary one.
+      tbl.select("id, name").ilike("slug", restaurantParam).maybeSingle().then(({ data }: any) => {
+        if (data) {
+          setRestaurants([data]);
+          setRestaurantId(data.id);
+          return;
+        }
+        tbl.select("id, name").eq("id", restaurantParam).maybeSingle().then(({ data }: any) => {
+          if (data) {
+            setRestaurants([data]);
+            setRestaurantId(data.id);
+          }
+        });
+      });
+      return;
+    }
+    tbl.select("id, name").order("name").limit(20).then(({ data }: any) => {
       if (data && data.length > 0) {
         setRestaurants(data);
         setRestaurantId(data[0].id);
       }
     });
-  }, []);
+  }, [restaurantParam]);
+
+  useEffect(() => {
+    if (!restaurantId) return;
+    let cancelled = false;
+    supabase.from("restaurant_hours").select("id").eq("restaurant_id", restaurantId).limit(1).then(({ data }) => {
+      if (!cancelled) setHasConfiguredHours((data?.length ?? 0) > 0);
+    });
+    return () => { cancelled = true; };
+  }, [restaurantId]);
+
+  useEffect(() => {
+    if (!restaurantId || !hasConfiguredHours) { setSlots(null); return; }
+    let cancelled = false;
+    setSlotsLoading(true);
+    supabase.rpc("available_slots", { _restaurant_id: restaurantId, _date: date, _party_size: party })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setSlotsLoading(false);
+        if (error) { toast.error(friendlyReservationError(error.message)); setSlots([]); return; }
+        const rows = (data ?? []) as { slot: string; local_time: string; tables_free: number }[];
+        setSlots(rows);
+        if (rows.length > 0 && !rows.some((s) => s.local_time === time && s.tables_free > 0)) {
+          const firstFree = rows.find((s) => s.tables_free > 0);
+          if (firstFree) setTime(firstFree.local_time);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [restaurantId, date, party, hasConfiguredHours]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (user) {
@@ -48,7 +112,8 @@ function Book() {
   const submit = async () => {
     if (!restaurantId) return toast.error("No restaurant available");
     setBusy(true);
-    const reservedAt = new Date(`${date}T${time}:00`);
+    const matchingSlot = slots?.find((s) => s.local_time === time);
+    const reservedAt = matchingSlot ? new Date(matchingSlot.slot) : new Date(`${date}T${time}:00`);
     const { error } = await supabase.from("reservations").insert({
       restaurant_id: restaurantId,
       guest_name: name, guest_phone: phone || null, guest_email: email || null,
@@ -57,9 +122,13 @@ function Book() {
       user_id: user?.id ?? null,
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyReservationError(error.message));
     setStep(3);
   };
+
+  const showDynamicSlots = hasConfiguredHours === true;
+  const isVenueClosedToday = showDynamicSlots && !slotsLoading && (slots?.length ?? 0) === 0;
+  const noCapacityLeft = showDynamicSlots && !slotsLoading && (slots?.length ?? 0) > 0 && !slots!.some((s) => s.tables_free > 0);
 
   const dates = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() + i);
@@ -128,13 +197,37 @@ function Book() {
               </div>
               <div>
                 <Label icon={<Clock className="size-4" />}>Available times</Label>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {["18:00","18:30","19:00","19:30","20:00","20:30","21:00","21:30","22:00"].map((t) => (
-                    <button key={t} onClick={() => setTime(t)} className={`py-3 rounded-lg text-xs font-medium border tnum ${time === t ? "bg-foreground text-background border-foreground" : "border-border hover:bg-muted"}`}>
-                      {t}
-                    </button>
-                  ))}
-                </div>
+                {showDynamicSlots && slotsLoading && (
+                  <div className="py-3 text-sm text-muted-foreground inline-flex items-center gap-2"><Loader2 className="size-4 animate-spin" /> Verificando horários…</div>
+                )}
+                {isVenueClosedToday && (
+                  <p className="py-3 text-sm text-muted-foreground">O restaurante não abre neste dia. Escolha outra data.</p>
+                )}
+                {!isVenueClosedToday && noCapacityLeft && (
+                  <p className="py-3 text-sm text-muted-foreground">Sem mesas livres para {party} pessoas neste dia. Tente outra data ou reduza o número de pessoas.</p>
+                )}
+                {(!showDynamicSlots || (!slotsLoading && !isVenueClosedToday)) && (
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {(showDynamicSlots
+                      ? (slots ?? []).map((s) => ({ t: s.local_time, full: s.tables_free <= 0 }))
+                      : ["18:00","18:30","19:00","19:30","20:00","20:30","21:00","21:30","22:00"].map((t) => ({ t, full: false }))
+                    ).map(({ t, full }) => (
+                      <button
+                        key={t}
+                        onClick={() => !full && setTime(t)}
+                        disabled={full}
+                        title={full ? "Sem mesas livres neste horário" : undefined}
+                        className={`py-3 rounded-lg text-xs font-medium border tnum ${
+                          full ? "opacity-30 cursor-not-allowed border-border"
+                          : time === t ? "bg-foreground text-background border-foreground"
+                          : "border-border hover:bg-muted"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -184,7 +277,7 @@ function Book() {
               <div className="text-xs text-muted-foreground tnum">{new Date(date).toLocaleDateString([], {month:'short', day:'numeric'})} · {time} · {party}</div>
               <button
                 onClick={() => step === 2 ? submit() : setStep(2)}
-                disabled={busy || (step === 2 && !name.trim())}
+                disabled={busy || (step === 2 && !name.trim()) || (step === 1 && (isVenueClosedToday || noCapacityLeft || (showDynamicSlots && slotsLoading)))}
                 className="h-10 px-4 rounded-lg bg-foreground text-background text-sm font-medium inline-flex items-center gap-1.5 disabled:opacity-50"
               >
                 {busy ? <Loader2 className="size-4 animate-spin" /> : <>{step === 2 ? "Confirm" : "Continue"} <ArrowRight className="size-4" /></>}
