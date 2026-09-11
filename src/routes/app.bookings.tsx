@@ -74,6 +74,7 @@ function Bookings() {
                 <th className="text-left px-5 py-3">Party</th>
                 <th className="text-left px-5 py-3">Table</th>
                 <th className="text-left px-5 py-3">Status</th>
+                <th className="text-left px-5 py-3">Depósito</th>
                 <th className="text-right px-5 py-3">Actions</th>
               </tr>
             </thead>
@@ -100,6 +101,9 @@ function Bookings() {
                       {r.status.replace("_", " ")}
                     </span>
                   </td>
+                  <td className="px-5 py-4">
+                    <DepositBadge status={(r as any).deposit_status} amount={(r as any).deposit_amount} />
+                  </td>
                   <td className="px-5 py-4 text-right">
                     {r.status === "pending" && <button onClick={() => updateStatus.mutate({ id: r.id, status: "confirmed" })} className="text-xs font-medium text-accent hover:underline mr-3">Confirm</button>}
                     {r.status === "confirmed" && <button onClick={() => updateStatus.mutate({ id: r.id, status: "seated" })} className="text-xs font-medium text-accent hover:underline mr-3">Seat</button>}
@@ -116,6 +120,18 @@ function Bookings() {
       {creating && <NewReservationDrawer onClose={() => setCreating(false)} restaurantId={restaurantId!} tables={tables.data ?? []} />}
     </div>
   );
+}
+
+function DepositBadge({ status, amount }: { status?: string | null; amount?: number | null }) {
+  if (!status || status === "none") return <span className="text-xs text-muted-foreground">—</span>;
+  const map: Record<string, { label: string; cls: string }> = {
+    pending: { label: "Pendente", cls: "bg-muted text-muted-foreground" },
+    paid: { label: `Pago${amount != null ? ` · ${Number(amount).toFixed(2)}` : ""}`, cls: "bg-success/15 text-success" },
+    failed: { label: "Falhou", cls: "bg-destructive/10 text-destructive" },
+    refunded: { label: "Reembolsado", cls: "bg-muted text-muted-foreground" },
+  };
+  const s = map[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
+  return <span className={`rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${s.cls}`}>{s.label}</span>;
 }
 
 function NewReservationDrawer({ onClose, restaurantId, tables }: { onClose: () => void; restaurantId: string; tables: any[] }) {

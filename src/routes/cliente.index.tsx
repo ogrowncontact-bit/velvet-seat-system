@@ -22,6 +22,8 @@ type Reservation = {
   status: string;
   guest_name: string;
   notes: string | null;
+  deposit_status: string | null;
+  deposit_amount: number | null;
   restaurant: { id: string; name: string; slug: string | null; address: string | null } | null;
 };
 
@@ -35,7 +37,7 @@ function ClienteHome() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reservations")
-        .select("id, reserved_at, party_size, status, guest_name, notes, restaurant:restaurants(id, name, slug, address)")
+        .select("id, reserved_at, party_size, status, guest_name, notes, deposit_status, deposit_amount, restaurant:restaurants(id, name, slug, address)")
         .eq("user_id", user!.id)
         .order("reserved_at", { ascending: false });
       if (error) throw error;
@@ -133,9 +135,10 @@ function Section({
           {items.map((r) => (
             <li key={r.id} className="rounded-2xl border border-border bg-card p-5 flex flex-col md:flex-row md:items-center gap-4">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h3 className="font-medium truncate">{r.restaurant?.name ?? "Restaurante"}</h3>
                   <StatusPill status={r.status} />
+                  <DepositPill status={r.deposit_status} amount={r.deposit_amount} />
                 </div>
                 <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
                   <span className="inline-flex items-center gap-1.5"><Clock className="size-3.5" />{format(new Date(r.reserved_at), "dd MMM yyyy · HH:mm", { locale: ptBR })}</span>
@@ -278,6 +281,19 @@ function StatusPill({ status }: { status: string }) {
     no_show: { label: "Não compareceu", cls: "bg-destructive/10 text-destructive" },
   };
   const s = map[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
+  return <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>;
+}
+
+function DepositPill({ status, amount }: { status: string | null; amount: number | null }) {
+  if (!status || status === "none") return null;
+  const map: Record<string, { label: string; cls: string }> = {
+    pending: { label: "Depósito pendente", cls: "bg-muted text-muted-foreground" },
+    paid: { label: `Depósito pago${amount != null ? ` · ${amount.toFixed(2)}` : ""}`, cls: "bg-success/15 text-success" },
+    failed: { label: "Depósito falhou", cls: "bg-destructive/10 text-destructive" },
+    refunded: { label: "Depósito reembolsado", cls: "bg-muted text-muted-foreground" },
+  };
+  const s = map[status];
+  if (!s) return null;
   return <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>;
 }
 

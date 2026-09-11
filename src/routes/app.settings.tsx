@@ -1,14 +1,24 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import { useCurrentRestaurant } from "@/hooks/use-current-restaurant";
 import { supabase } from "@/integrations/supabase/client";
 import { qk, fetchHours, fetchClosures, fetchTables } from "@/lib/queries";
 import { friendlyReservationError } from "@/lib/reservation-errors";
+import { getConnectStatus, createConnectOnboardingLink, refreshConnectStatus } from "@/lib/stripe-connect.functions";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Copy, LayoutGrid, ArrowRight } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, LayoutGrid, ArrowRight, CreditCard, CheckCircle2, ExternalLink } from "lucide-react";
 
-export const Route = createFileRoute("/app/settings")({ component: SettingsPage });
+const settingsSearchSchema = z.object({
+  stripe: z.enum(["return", "refresh"]).optional(),
+});
+
+export const Route = createFileRoute("/app/settings")({
+  validateSearch: settingsSearchSchema,
+  component: SettingsPage,
+});
 
 function SettingsPage() {
   const qc = useQueryClient();
@@ -139,6 +149,8 @@ function SettingsPage() {
         </div>
       </section>
 
+      {restaurantId && <PaymentsSection restaurantId={restaurantId} />}
+
       {restaurantId && <HoursSection restaurantId={restaurantId} />}
 
       <section className="rounded-3xl border border-border bg-card overflow-hidden">
@@ -223,6 +235,105 @@ const KINDS = [
   { k: "reply_confirmed", label: "Resposta: confirmada" },
   { k: "reply_cancelled", label: "Resposta: cancelada" },
 ] as const;
+
+function PaymentsSection({ restaurantId }: { restaurantId: string }) {
+  const { stripe: stripeReturn } = useSearch({ from: "/app/settings" });
+  const qc = useQueryClient();
+  const getStatus = useServerFn(getConnectStatus);
+  const createLink = useServerFn(createConnectOnboardingLink);
+  const refreshStatus = useServerFn(refreshConnectStatus);
+  const [connecting, setConnecting] = useState(false);
+
+  const status = useQuery({
+    queryKey: ["stripe-connect-status", restaurantId],
+    queryFn: () => getStatus({ data: { restaurantId } }),
+  });
+
+  const refresh = useMutation({
+    mutationFn: () => refreshStatus({ data: { restaurantId } }),
+    onSuccess: (r) => {
+      qc.setQueryData(["stripe-connect-status", restaurantId], r);
+    },
+  });
+
+  // Landed back from Stripe's hosted onboarding — re-sync immediately instead
+  // of waiting for the account.updated webhook to arrive.
+  useEffect(() => {
+    if (stripeReturn === "return" || stripeReturn === "refresh") refresh.mutate();
+  }, [stripeReturn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const connect = async () => {
+    setConnecting(true);
+    try {
+      const { url } = await createLink({ data: { restaurantId } });
+      window.location.href = url;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to start Stripe onboarding");
+      setConnecting(false);
+    }
+  };
+
+  const s = status.data;
+
+  return (
+    <section className="rounded-3xl border border-border bg-card overflow-hidden">
+      <div className="p-6 border-b border-border">
+        <h2 className="font-medium">Pagamentos</h2>
+        <p className="text-xs text-muted-foreground mt-1">
+          Conecte sua conta Stripe para receber depósitos de reserva diretamente na sua conta bancária. 100% do
+          depósito vai para o restaurante — a plataforma não retém nada disso. Configure o valor em "Default deposit
+          per guest" acima; deixe em 0 para não cobrar depósito.
+        </p>
+      </div>
+      <div className="p-6">
+        {status.isLoading ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : s?.chargesEnabled ? (
+          <div className="flex items-center gap-4">
+            <div className="size-11 rounded-xl bg-success/15 text-success grid place-items-center shrink-0">
+              <CheckCircle2 className="size-5" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium">Conta Stripe conectada</div>
+              <div className="text-xs text-muted-foreground">Pronto para receber depósitos de clientes.</div>
+            </div>
+            <button
+              onClick={connect}
+              disabled={connecting}
+              className="h-9 px-3.5 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium inline-flex items-center gap-1.5 disabled:opacity-50 shrink-0"
+            >
+              Gerenciar <ExternalLink className="size-3.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4">
+            <div className="size-11 rounded-xl bg-muted grid place-items-center shrink-0">
+              <CreditCard className="size-5 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium">
+                {s?.connected ? "Configuração pendente" : "Nenhuma conta conectada"}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {s?.connected
+                  ? "Você começou a configurar sua conta Stripe, mas ainda falta concluir."
+                  : "Sem uma conta Stripe conectada, as reservas não pedem depósito."}
+              </div>
+            </div>
+            <button
+              onClick={connect}
+              disabled={connecting}
+              className="h-10 px-4 rounded-lg bg-foreground text-background text-sm font-medium inline-flex items-center gap-2 disabled:opacity-50 shrink-0"
+            >
+              {connecting && <Loader2 className="size-4 animate-spin" />}
+              {s?.connected ? "Continuar configuração" : "Conectar conta Stripe"}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
 function WhatsAppSection({ restaurantId, restaurant }: { restaurantId: string; restaurant: any }) {
   const qc = useQueryClient();

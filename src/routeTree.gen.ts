@@ -37,6 +37,7 @@ import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as ApiPublicHooksWhatsappWebhookRouteImport } from './routes/api/public/hooks/whatsapp-webhook'
 import { Route as ApiPublicHooksWhatsappDispatchRouteImport } from './routes/api/public/hooks/whatsapp-dispatch'
+import { Route as ApiPublicHooksStripeWebhookRouteImport } from './routes/api/public/hooks/stripe-webhook'
 
 const RestaurantsRoute = RestaurantsRouteImport.update({
   id: '/restaurants',
@@ -180,6 +181,12 @@ const ApiPublicHooksWhatsappDispatchRoute =
     path: '/api/public/hooks/whatsapp-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksStripeWebhookRoute =
+  ApiPublicHooksStripeWebhookRouteImport.update({
+    id: '/api/public/hooks/stripe-webhook',
+    path: '/api/public/hooks/stripe-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/staff/login': typeof StaffLoginRoute
   '/app/': typeof AppIndexRoute
   '/cliente/': typeof ClienteIndexRoute
+  '/api/public/hooks/stripe-webhook': typeof ApiPublicHooksStripeWebhookRoute
   '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
   '/api/public/hooks/whatsapp-webhook': typeof ApiPublicHooksWhatsappWebhookRoute
 }
@@ -236,6 +244,7 @@ export interface FileRoutesByTo {
   '/staff/login': typeof StaffLoginRoute
   '/app': typeof AppIndexRoute
   '/cliente': typeof ClienteIndexRoute
+  '/api/public/hooks/stripe-webhook': typeof ApiPublicHooksStripeWebhookRoute
   '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
   '/api/public/hooks/whatsapp-webhook': typeof ApiPublicHooksWhatsappWebhookRoute
 }
@@ -267,6 +276,7 @@ export interface FileRoutesById {
   '/staff/login': typeof StaffLoginRoute
   '/app/': typeof AppIndexRoute
   '/cliente/': typeof ClienteIndexRoute
+  '/api/public/hooks/stripe-webhook': typeof ApiPublicHooksStripeWebhookRoute
   '/api/public/hooks/whatsapp-dispatch': typeof ApiPublicHooksWhatsappDispatchRoute
   '/api/public/hooks/whatsapp-webhook': typeof ApiPublicHooksWhatsappWebhookRoute
 }
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/staff/login'
     | '/app/'
     | '/cliente/'
+    | '/api/public/hooks/stripe-webhook'
     | '/api/public/hooks/whatsapp-dispatch'
     | '/api/public/hooks/whatsapp-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/staff/login'
     | '/app'
     | '/cliente'
+    | '/api/public/hooks/stripe-webhook'
     | '/api/public/hooks/whatsapp-dispatch'
     | '/api/public/hooks/whatsapp-webhook'
   id:
@@ -357,6 +369,7 @@ export interface FileRouteTypes {
     | '/staff/login'
     | '/app/'
     | '/cliente/'
+    | '/api/public/hooks/stripe-webhook'
     | '/api/public/hooks/whatsapp-dispatch'
     | '/api/public/hooks/whatsapp-webhook'
   fileRoutesById: FileRoutesById
@@ -373,6 +386,7 @@ export interface RootRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   RSlugRoute: typeof RSlugRoute
   StaffLoginRoute: typeof StaffLoginRoute
+  ApiPublicHooksStripeWebhookRoute: typeof ApiPublicHooksStripeWebhookRoute
   ApiPublicHooksWhatsappDispatchRoute: typeof ApiPublicHooksWhatsappDispatchRoute
   ApiPublicHooksWhatsappWebhookRoute: typeof ApiPublicHooksWhatsappWebhookRoute
 }
@@ -575,6 +589,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWhatsappDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/stripe-webhook': {
+      id: '/api/public/hooks/stripe-webhook'
+      path: '/api/public/hooks/stripe-webhook'
+      fullPath: '/api/public/hooks/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicHooksStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -637,6 +658,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   RSlugRoute: RSlugRoute,
   StaffLoginRoute: StaffLoginRoute,
+  ApiPublicHooksStripeWebhookRoute: ApiPublicHooksStripeWebhookRoute,
   ApiPublicHooksWhatsappDispatchRoute: ApiPublicHooksWhatsappDispatchRoute,
   ApiPublicHooksWhatsappWebhookRoute: ApiPublicHooksWhatsappWebhookRoute,
 }
