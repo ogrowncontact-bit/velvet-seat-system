@@ -717,6 +717,8 @@ export type Database = {
           created_by: string | null
           customer_id: string | null
           deposit_amount: number
+          deposit_payment_intent_id: string | null
+          deposit_status: Database["public"]["Enums"]["deposit_status"]
           duration_minutes: number
           guest_email: string | null
           guest_name: string
@@ -737,6 +739,8 @@ export type Database = {
           created_by?: string | null
           customer_id?: string | null
           deposit_amount?: number
+          deposit_payment_intent_id?: string | null
+          deposit_status?: Database["public"]["Enums"]["deposit_status"]
           duration_minutes?: number
           guest_email?: string | null
           guest_name: string
@@ -757,6 +761,8 @@ export type Database = {
           created_by?: string | null
           customer_id?: string | null
           deposit_amount?: number
+          deposit_payment_intent_id?: string | null
+          deposit_status?: Database["public"]["Enums"]["deposit_status"]
           duration_minutes?: number
           guest_email?: string | null
           guest_name?: string
@@ -962,6 +968,9 @@ export type Database = {
           slot_interval_minutes: number
           slug: string | null
           status: Database["public"]["Enums"]["restaurant_status"]
+          stripe_account_id: string | null
+          stripe_charges_enabled: boolean
+          stripe_details_submitted: boolean
           timezone: string
           updated_at: string
           website: string | null
@@ -995,6 +1004,9 @@ export type Database = {
           slot_interval_minutes?: number
           slug?: string | null
           status?: Database["public"]["Enums"]["restaurant_status"]
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
+          stripe_details_submitted?: boolean
           timezone?: string
           updated_at?: string
           website?: string | null
@@ -1028,6 +1040,9 @@ export type Database = {
           slot_interval_minutes?: number
           slug?: string | null
           status?: Database["public"]["Enums"]["restaurant_status"]
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
+          stripe_details_submitted?: boolean
           timezone?: string
           updated_at?: string
           website?: string | null
@@ -1435,6 +1450,7 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "manager" | "host" | "staff"
+      deposit_status: "none" | "pending" | "paid" | "failed" | "refunded"
       message_direction: "out" | "in"
       message_kind:
         | "confirmation"
@@ -1597,6 +1613,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "manager", "host", "staff"],
+      deposit_status: ["none", "pending", "paid", "failed", "refunded"],
       message_direction: ["out", "in"],
       message_kind: [
         "confirmation",
